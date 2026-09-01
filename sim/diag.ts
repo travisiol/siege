@@ -8,7 +8,15 @@ import { fmt, WAD } from "./fixed.ts";
 import { claimCost } from "./rules.ts";
 import { TIER_YIELD } from "./hex.ts";
 
-const cfg = { ...BASE, guilds: 5, soloWhaleGuilds: 4, positionModel: "conquest-only" as const };
+// Deliberately runs with taxClaims OFF: this script exists to show the hole the
+// claim tax closed. With the fix on, the same scenario tops out at 11.3%.
+const cfg = {
+  ...BASE,
+  guilds: 5,
+  soloWhaleGuilds: 4,
+  positionModel: "conquest-only" as const,
+  taxClaims: false,
+};
 const w = runSeason(cfg, BASE.seed);
 const N = w.hexes.length;
 
@@ -18,7 +26,7 @@ const [topId, topShare] = ranked[0];
 const top = w.agents[topId];
 const guild = w.guilds[top.guild - 1];
 
-console.log("DIAGNOSTIC -- whale-solo-5g scenario\n" + "=".repeat(70));
+console.log("DIAGNOSTIC -- whale-solo-5g with claims UNTAXED (the hole the fix closed)\n" + "=".repeat(70));
 console.log(`Dominant wallet     #${topId}  (${top.arch}, guild ${top.guild})`);
 console.log(`Members in guild     ${guild.members.length}`);
 console.log(`Share of map        ${((100 * Number(topShare)) / (1e6 * N)).toFixed(1)}%`);

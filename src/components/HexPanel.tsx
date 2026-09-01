@@ -201,9 +201,9 @@ export function HexPanel({ cell, onClose }: { cell: HexCell; onClose: () => void
           {owner === 0 ? (
             <dl>
               <Row
-                k="Claim cost"
+                k="Claim cost from"
                 v={`${money(e.claimCost)} ${siteConfig.ticker}`}
-                hint="Tier x 100, flat. No battle: a free hex next to yours is simply bought."
+                hint="Tier x 100 for a guild with no ground yet. No battle — a free hex next to yours is simply bought. The price carries the same empire multiplier as attacking, so it climbs steeply with what your guild already holds."
               />
               <Row
                 k="Pays for itself in"

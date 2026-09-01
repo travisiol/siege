@@ -34,6 +34,14 @@ export type Config = {
   soloWhaleGuilds: number;
   /** Claims qu'un meme wallet peut placer dans un tick. Rien dans le brief ne le limite. */
   maxClaimsPerTick: number;
+  /**
+   * CORRECTIF. Le brief n'applique la taxe d'empire qu'a l'attaque, ce qui laisse
+   * l'expansion sur les hexes neutres entierement gratuite quelle que soit la
+   * taille de la guilde -- le trou par lequel un wallet solo prend 40% de la
+   * carte sans livrer bataille. A vrai, le claim subit la meme courbe que
+   * l'attaque: grandir coute cher, peu importe comment on grandit.
+   */
+  taxClaims: boolean;
   /** Cagnotte de saison pre-financee et fixe. */
   seasonPool: bigint;
   /** Unite de rendement par tick et par point de tier. */
@@ -58,6 +66,7 @@ export const BASE: Config = {
   positionModel: "accumulate",
   soloWhaleGuilds: 0,
   maxClaimsPerTick: 3,
+  taxClaims: true,
   seasonPool: tokens(2_000_000),
   yieldUnit: tokens(5),
   empireTaxStopX100: 900n,

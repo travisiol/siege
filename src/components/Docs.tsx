@@ -64,7 +64,7 @@ const FORMULAS = [
   {
     title: "Empire tax",
     code: "cost = stake × (100 + hexes²) / 100",
-    note: "Attacking with 10 hexes costs double, 20 costs five times, 30 costs ten times. The surcharge is burned, not redistributed.",
+    note: "Attacking with 10 hexes costs double, 20 costs five times, 30 costs ten times — and claiming empty ground pays the same multiplier. The surcharge is burned, not redistributed. Growing is what costs you.",
   },
   {
     title: "Resolution",
@@ -100,7 +100,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Can a whale just buy the whole map?",
-    a: "That is the exact question the balance simulation exists to answer, and the honest answer today is: not entirely, but further than intended. See Status below — the rules around claiming neutral ground are being revised before any launch.",
+    a: "It could, until recently. Claiming empty ground was flat-priced, so a well-funded wallet playing alone took 40% of the map without fighting once. Claiming now carries the same empire multiplier as attacking — the more you hold, the more the next hex costs — and across ten simulated seasons no wallet finishes above 11.3%.",
   },
   {
     q: "Can I be knocked out completely?",
@@ -305,7 +305,7 @@ export function Docs({ onClose }: { onClose: () => void }) {
         <ul className="mt-4 space-y-3">
           {[
             ["Your first hex", "A new guild claims any unowned hex on the rim of the map. That hex becomes its refuge."],
-            ["Free ground", `A neutral hex touching ground you already hold is bought outright — ${money(TIER_ROWS[0].claim)} to ${money(TIER_ROWS[2].claim)} ${siteConfig.ticker} depending on tier. No battle.`],
+            ["Free ground", `A neutral hex touching ground you already hold is bought outright — no battle. From ${money(TIER_ROWS[0].claim)} ${siteConfig.ticker} by tier, rising steeply with how much you already hold.`],
             ["Held ground", "You can only attack a hex adjacent to one of yours. Both sides commit blind; the attacker needs strictly more power than the defender."],
             ["Refuges", "Never attackable. One per guild, movable once every 21 ticks."],
           ].map(([title, body]) => (
@@ -385,15 +385,21 @@ export function Docs({ onClose }: { onClose: () => void }) {
             No contract is deployed and no season has been played. The rules
             above are the design; the balance simulation that has to clear before
             any of it ships is written and running, over ten seasons and five
-            hundred agents.
+            hundred agents each.
           </p>
           <p className="type-body mt-3 max-w-[64ch] text-chalk-soft">
-            It has not cleared. The gate is that no single wallet ends a season
-            holding more than 15% of the map, and one strategy beats it: buying
-            unclaimed ground is not subject to the empire tax, so a well-funded
-            wallet playing alone can take a large share of the map without ever
-            fighting. That is being fixed before launch, and this page will say
-            so when it is.
+            It clears — now. It did not at first: the gate is that no single
+            wallet ends a season holding more than 15% of the map, and one
+            strategy took 45.9%. Claiming empty ground was flat-priced, so a
+            wallet playing alone in a one-member guild bought 216 hexes for a
+            third of its capital and never fought a battle. Claiming now carries
+            the same empire multiplier as attacking, and the worst wallet across
+            every scenario finishes at 11.3%.
+          </p>
+          <p className="type-body mt-3 max-w-[64ch] text-chalk-soft">
+            One thing is still wrong and is not being hidden: the empire tax
+            burns roughly 63% of all staked capital per season, and the supply is
+            fixed. That exponent has to come down before a real season runs.
           </p>
           <p className="type-data mt-3 text-chalk-muted">
             The board on this page is the simulation&apos;s own output at tick{" "}

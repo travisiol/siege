@@ -43,6 +43,14 @@ const scenarios: Scenario[] = [
       positionModel: "conquest-only", maxClaimsPerTick: 1,
     },
   },
+  {
+    name: "BRIEF-AS-WRITTEN",
+    note: "the same worst case with claims left untaxed -- kept as the reference that failed",
+    cfg: {
+      ...BASE, guilds: 5, soloWhaleGuilds: 4,
+      positionModel: "conquest-only", taxClaims: false,
+    },
+  },
 ];
 
 function runScenario(s: Scenario): SeasonReport[] {
@@ -113,6 +121,10 @@ console.log(
 console.log(
   `Agents: ${BASE.counts.passive} passive, ${BASE.counts.medium} medium, ` +
   `${BASE.counts.whale} whales (100x), ${BASE.guilds} guilds`,
+);
+console.log(
+  `Claim tax: ${BASE.taxClaims ? "ON" : "OFF"} -- claiming neutral ground carries the ` +
+  "same empire multiplier as attacking",
 );
 
 const all: { s: Scenario; reps: SeasonReport[] }[] = [];

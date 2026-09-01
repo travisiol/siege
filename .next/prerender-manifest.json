@@ -5,7 +5,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 25422,
+      "htmlSize": 28008,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -62,7 +62,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 15542,
+      "htmlSize": 15803,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -218,8 +218,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "c046443ecb48435ee8f843ba3f699976",
-    "previewModeSigningKey": "466b29d56d960198c234bd177fcf3350396c7860e28c2bb0aa2e545ddb625252",
-    "previewModeEncryptionKey": "94b01635f919c32a981246f94f8f326414678a7dfe65d85ccb426f74d522ce33"
+    "previewModeId": "da50c5a52e57ae1a6ad89ea9b371ba27",
+    "previewModeSigningKey": "775c3afc50281f9a691db72f8ba8a2c9a3486ed80a5730005d94b11325e413ce",
+    "previewModeEncryptionKey": "7ab716f6d37e3279a313140bdbcebf87d8312a7cd90defd0e7c8b355691dfabe"
   }
 }

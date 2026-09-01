@@ -74,9 +74,22 @@ export const REFUGE_MOVE_COOLDOWN = 21;
 export const TICKS_PER_SEASON = 126;
 export const REBELLION_TICK = 32;
 
-/** Cout de claim d'un hex neutre adjacent: tier * 100 $SIEGE. */
-export function claimCost(tier: number, wad: bigint): bigint {
-  return BigInt(tier) * 100n * wad;
+/**
+ * Cout de claim d'un hex neutre adjacent: tier * 100 $SIEGE.
+ *
+ * Avec `taxed`, le meme multiplicateur d'empire que l'attaque s'y applique. Sans
+ * lui, l'expansion sur le neutre est gratuite a toute taille et la taxe d'empire
+ * ne freine que la conquete -- voir README, trou #6.
+ */
+export function claimCost(
+  tier: number,
+  wad: bigint,
+  guildHexCount = 0,
+  taxed = false,
+): bigint {
+  const base = BigInt(tier) * 100n * wad;
+  if (!taxed) return base;
+  return (base * empireTaxMultiplierX100(guildHexCount)) / 100n;
 }
 
 export { min };

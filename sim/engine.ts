@@ -221,7 +221,7 @@ export type Effects = {
   balance: Map<number, bigint>;         // credits post-resolution (remboursements + gains)
   burn: bigint;
   conquests: { hex: number; from: number; to: number; contributors: [number, bigint][] }[];
-  claims: { hex: number; guild: number; contributors: [number, bigint][] }[];
+  claims: { hex: number; guild: number; contributors: [number, bigint][]; toTreasury: bigint }[];
   defended: number[];
   battles: number;
 };
@@ -284,7 +284,16 @@ export function resolveTick(
         if (p > best) { best = p; winner = gid; }        // egalite -> plus petit guildId
       }
 
-      const cost = claimCost(snap.tier[hexId], WAD);
+      // Le prix de base amorce le tresor de l'hex; le surcout d'empire est brule,
+      // exactement comme celui de l'attaque. Sans cela la taxe alimenterait la
+      // cagnotte via l'upkeep et la « cagnotte fixe » cesserait d'etre fixe.
+      const base = claimCost(snap.tier[hexId], WAD);
+      const cost = claimCost(
+        snap.tier[hexId],
+        WAD,
+        snap.hexCount[winner - 1],
+        w.cfg.taxClaims,
+      );
       const winOrders = byGuild.get(winner)!;
       let pooled = 0n;
       for (const o of winOrders) pooled += o.amount;
@@ -302,9 +311,13 @@ export function resolveTick(
         credit(eff.balance, o.agent, o.amount - part);
         consumed += part;
       }
-      eff.burn += cost - consumed;                       // reliquat de troncature
+      // `consumed` est exactement ce qui a quitte les soldes. On le repartit sans
+      // en creer ni en perdre: le prix de base amorce le tresor, tout le reste
+      // (surcout d'empire + reliquat de troncature) brule.
+      const toTreasury = base < consumed ? base : consumed;
+      eff.burn += consumed - toTreasury;
       for (const o of claims) if (o.guild !== winner) credit(eff.balance, o.agent, o.amount);
-      eff.claims.push({ hex: hexId, guild: winner, contributors });
+      eff.claims.push({ hex: hexId, guild: winner, contributors, toTreasury });
       continue;
     }
 

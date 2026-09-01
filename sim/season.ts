@@ -117,13 +117,11 @@ export function runSeason(cfg: Config, seed: number): World {
     // --- Application: claims
     for (const c of eff.claims) {
       const h = w.hexes[c.hex];
-      let cost = 0n;
-      for (const p of c.contributors) cost += p[1];
       w.guilds[c.guild - 1].hexes.add(c.hex);
       h.owner = c.guild;
       h.heldSinceTick = t;
       h.lastDefendedTick = t;
-      h.treasury += cost;                              // le cout de claim amorce le treasury
+      h.treasury += c.toTreasury;                      // seul le prix de base amorce le tresor
       h.positions = new Map<number, bigint>();
       for (const [id, v] of c.contributors) h.positions.set(id, (h.positions.get(id) ?? 0n) + v);
       // Le premier hex d'une guilde devient son refuge.

@@ -23,7 +23,7 @@ npm run sim
 ```
 
 `npm run sim:test` checks the formulas against the brief's own examples,
-`npm run sim:diag` dissects the scenario that breaks the gate, and
+`npm run sim:diag` dissects the scenario that used to break the gate, and
 `npm run sim:board` regenerates `src/lib/preview-board.ts`.
 
 ---
@@ -65,24 +65,40 @@ through the components.
 
 ---
 
-## M0 — verdict: the gate does not clear
+## M0 — the gate clears, after one rule change
 
 The brief is explicit: *no move to M1 if a single wallet ends a season holding
-more than 15% of the map.* Across 10 seasons of 126 ticks, 500 agents, 8
-scenarios:
+more than 15% of the map.* It did not clear as written. It does now.
+
+**The fix: claiming neutral ground carries the same empire multiplier as
+attacking.** The brief applied the empire tax only to attacks, which left
+expansion onto empty ground free at any size — the hole a solo wallet drove 216
+hexes through. One line of rule, and the worst case drops from 45.9% to 11.3%.
+
+Across 10 seasons of 126 ticks and 500 agents:
 
 | Scenario | Top wallet (worst season) | Gate |
 |---|---|---|
-| `base` — 1 wallet per actor, 12 guilds | 2.4% | PASS |
-| `conquest-only` — position minted on capture only | 2.7% | PASS |
-| `sybil-10` — each whale split into 10 wallets | 0.9% (actor aggregate: 3.5%) | PASS |
-| `sybil-100+conquest-only` | 1.1% (actor aggregate: 4.1%) | PASS |
-| `guilds-3` | 1.2% | PASS |
-| `whale-solo` — 4 whales in solo guilds, 12 guilds | 7.3% | PASS |
-| **`whale-solo-5g`** — solo guilds, 5 guilds | **45.9%** | **FAIL** |
-| **`whale-solo-5g-floor`** — same, 1 claim per tick | **18.5%** | **FAIL** |
+| `base` — 1 wallet per actor, 12 guilds | 4.0% | PASS |
+| `conquest-only` — position minted on capture only | 4.6% | PASS |
+| `sybil-10` — each whale split into 10 wallets | 0.9% (actor aggregate: 3.7%) | PASS |
+| `sybil-100+conquest-only` | 0.5% (actor aggregate: 1.5%) | PASS |
+| `guilds-3` | 2.0% | PASS |
+| `whale-solo` — 4 whales in solo guilds, 12 guilds | 4.2% | PASS |
+| `whale-solo-5g` — solo guilds, 5 guilds | 11.3% | PASS |
+| `whale-solo-5g-floor` — same, 1 claim per tick | 10.6% | PASS |
+| **`BRIEF-AS-WRITTEN`** — the same case, claims untaxed | **45.9%** | **FAIL** |
 
-### How one wallet takes 40% of the map (`npm run sim:diag`)
+The last row is kept deliberately: it is the reference that failed, and it is
+what proves the fix is what changed the outcome rather than a lucky seed.
+
+### The cost of the fix
+
+Burn rises from 51% to **63% of staked capital per season**, because the claim
+surcharge is burned like the attack surcharge. The gate is no longer the binding
+problem; the burn is. Lowering the empire tax exponent is now the top open item.
+
+### What the hole looked like (`npm run sim:diag`, claims untaxed)
 
 ```
 Dominant wallet     #0  (whale, guild 1)
@@ -99,25 +115,28 @@ Final balance        831,564 SIEGE  (x8.32)
 It fought **no battles** and lost **no hexes**. It bought 40% of the map at the
 listed price, for a third of its capital.
 
-Three rules combine badly:
+Three rules combined badly:
 
-1. **Claiming a neutral hex is untaxed.** The empire tax
-   (`stake * (100 + hexCount²) / 100`) applies only to attacks. A claim costs
-   `tier * 100` flat whether the guild holds 1 hex or 300. The whole map costs
-   less than a single whale's capital.
+1. **Claiming a neutral hex was untaxed.** The empire tax
+   (`stake * (100 + hexCount²) / 100`) applied only to attacks. A claim cost
+   `tier * 100` flat whether the guild held 1 hex or 300, so the whole map cost
+   less than a single whale's capital. **This is the one that was fixed.**
 2. **The empire tax freezes the map.** At 30 hexes an attack costs x10, at 216
    it costs x467. Past a certain size nobody can attack anybody, so the early
-   land grab becomes **irreversible**.
+   land grab is **irreversible**. Still true — which is exactly why the price of
+   that early grab had to stop being flat.
 3. **Nothing requires a minimum guild size.** Playing solo loses cohesion (102
    instead of 150), but cohesion only matters in combat — and this strategy
-   never fights.
+   never fought. Still true, now merely expensive rather than decisive.
 
-`base` clears the gate not because the design holds, but because 500 players
-spread across 12 guilds dilute each other. The gate measures the **wallet**;
-no rule forces an actor to play with one wallet, or to join a populated guild.
+The failure was robust: even at one claim per tick — a single transaction — the
+untaxed rules failed in 10 seasons out of 10. So is the fix, in the other
+direction: every scenario now clears with the worst wallet at 11.3%.
 
-The result is robust: even at one claim per tick — a single transaction — the
-gate fails in 10 seasons out of 10.
+Note what `base` does *not* prove. It clears at 4.0% because 500 players spread
+across 12 guilds dilute each other, not because the design forces it. The gate
+measures the **wallet**, and no rule obliges an actor to use one wallet or to
+join a populated guild — which is why the solo and sybil scenarios exist.
 
 ---
 
@@ -148,7 +167,9 @@ decide which land. Same fix as hole #1.
 in the same tick — who wins? *Assumed: highest A; exact tie means the defender
 holds; every losing attacker pays the 20%.*
 
-**6. No minimum guild size.** See the verdict above.
+**6. No minimum guild size.** Playing solo is legal and, before the claim tax,
+optimal. It is no longer decisive, but a floor on guild size is still worth a
+decision.
 
 **7. "A hex undefended for 30 ticks loses its fortification" is ambiguous** — not
 attacked, or no defensive stake? *Assumed: no defensive stake revealed in 30
@@ -171,9 +192,11 @@ price should be known: splitting a stake across N wallets multiplies power by
 
 ## Two figures beyond the gate
 
-**The empire tax destroys half the economy.** 51% of starting capital is burned
-per season, **99% of it from the attack surcharge alone**. Fixed supply, no
-minting: at that rate the game runs dry in a few seasons.
+**The empire tax destroys most of the economy.** 63% of starting capital is
+burned per season, **99% of it from the empire surcharge**. Fixed supply, no
+minting: at that rate the game runs dry in a couple of seasons. This is now the
+single worst number in the model, and the claim tax made it worse — the right
+answer is almost certainly a gentler exponent than `hexCount²`.
 
 **Small players leave before mid-season.** 61% of passive and medium players quit,
 median quit tick **43 of 126**, mostly through ruin.
@@ -201,13 +224,19 @@ plus 2,000 large random integers.
 
 ## Recommendations before opening M1
 
-1. **Tax claiming like attacking**, or scale the claim cost with `hexCount`.
-2. **Change the gate metric**: measure the largest **actor** and the largest
-   **guild**, not the largest wallet.
+1. ~~**Tax claiming like attacking.**~~ **Done** — `taxClaims`, on by default.
+   Worst-case wallet share went from 45.9% to 11.3%.
+2. **Lower the empire tax exponent** and re-measure the burn. Now the top item:
+   63% of capital destroyed per season is not survivable on a fixed supply.
 3. **Post a bond at commit** — closes holes #1 and #4 at once.
-4. **Lower the empire tax exponent** and re-measure the burn.
+4. **Change the gate metric**: measure the largest **actor** and the largest
+   **guild**, not the largest wallet.
 5. **Require a minimum guild size**, or accept solo play and price it.
 6. **Settle points 2, 3, 5, 7** — design choices, not bugs.
+7. **Design salt custody and the reveal window.** Commit at T, reveal 7h later:
+   a player who loses their salt cannot reveal and forfeits the stake, and a
+   player asleep during the 45-minute window forfeits it too. Neither has a
+   design yet, and both will hit every player eventually.
 
 ---
 

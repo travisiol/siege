@@ -116,10 +116,11 @@ export function decideOrders(w: World, snap: Snapshot, t: number): Order[] {
     const hasHex = plan.defendHexes.length > 0 && w.guilds[a.guild - 1].hexes.size > 0;
     if (!hasHex) { attackStake = 0n; defendStake = 0n; }
 
-    // --- Claim (non taxe par la taille de l'empire: voir README, trou #6)
+    // --- Claim. Sous `taxClaims`, il subit la meme courbe d'empire que l'attaque.
     // Une guilde reduite (typiquement un operateur solo) scripte plusieurs claims par
     // tick: rien dans le brief ne l'en empeche.
     const guildSize = w.guilds[a.guild - 1].members.filter((m) => w.agents[m].alive).length;
+    const guildHexes = snap.hexCount[a.guild - 1];
     if (plan.claimTargets.length > 0 && (guildSize <= 2 || k % 3 === 0)) {
       const targets = guildSize <= 2
         ? plan.claimTargets.slice(0, w.cfg.maxClaimsPerTick)
@@ -127,7 +128,7 @@ export function decideOrders(w: World, snap: Snapshot, t: number): Order[] {
       let spent = 0n;
       let placed = false;
       for (const target of targets) {
-        const need = claimCost(snap.tier[target], WAD);
+        const need = claimCost(snap.tier[target], WAD, guildHexes, w.cfg.taxClaims);
         if (spent + need > a.balance) break;
         orders.push({ agent: a.id, guild: a.guild, hex: target, amount: need, kind: "claim" });
         spent += need;
