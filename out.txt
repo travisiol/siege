@@ -1,0 +1,205 @@
+SIEGE -- M0, simulation d'equilibrage
+================================================================================
+Carte: rayon 13 -> 547 hexes (le brief dit 512: incompatible, voir README)
+Tiers: t1=383 (70%)  t2=137 (25%)  t3=27 (5%)
+Agents: 200 passifs, 250 moyens, 50 whales (100x), 12 guildes
+
+=== base  --  1 wallet par acteur, position diluee par la defense
+    10 saisons de 126 ticks
+  Part du top wallet                     2.1%   (min 1.9  max 2.4  sd 0.1)
+  Part du top acteur (Sybil agrege)      2.1%   (min 1.9  max 2.4  sd 0.1)
+  Part cumulee du top 10 wallets        13.4%   (min 12.8  max 14.1  sd 0.4)
+  Part de la plus grosse guilde         16.4%   (min 15.9  max 17.0  sd 0.3)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.588   (min 0.576  max 0.598  sd 0.007)
+  Gini territoire (tous wallets)       0.605   (min 0.596  max 0.611  sd 0.005)
+  Gini soldes finaux                   0.707   (min 0.697  max 0.719  sd 0.006)
+  Abandon petits joueurs                60.7%   (min 57.3  max 64.9  sd 2.8)
+    dont passifs                        60.8%   (min 53.0  max 67.0  sd 4.8)
+    dont moyens                         60.6%   (min 56.8  max 64.8  sd 3.0)
+    dont whales                         49.6%   (min 40.0  max 62.0  sd 6.9)
+  Tick median d'abandon                   43   (min 38  max 55  sd 5)
+  Capital detruit (burn)                50.7%   (min 48.4  max 53.3  sd 2.1)
+    dont taxe d'empire 99%, penalites de bataille 1%, reveals rates 0%
+  Cagnotte non consommee                90.0%   (min 89.7  max 90.2  sd 0.2)
+  Batailles / saison                     750   (min 642  max 904  sd 69)
+  Conquetes / saison                     582   (min 491  max 681  sd 58)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 2.4%  ->  PASS
+
+=== conquest-only  --  position mintee a la prise seulement (lecture favorable aux whales)
+    10 saisons de 126 ticks
+  Part du top wallet                     2.5%   (min 2.3  max 2.7  sd 0.1)
+  Part du top acteur (Sybil agrege)      2.5%   (min 2.3  max 2.7  sd 0.1)
+  Part cumulee du top 10 wallets        16.5%   (min 15.7  max 17.2  sd 0.5)
+  Part de la plus grosse guilde         16.4%   (min 15.9  max 17.0  sd 0.3)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.548   (min 0.533  max 0.561  sd 0.009)
+  Gini territoire (tous wallets)       0.650   (min 0.636  max 0.658  sd 0.007)
+  Gini soldes finaux                   0.721   (min 0.710  max 0.729  sd 0.006)
+  Abandon petits joueurs                60.7%   (min 57.3  max 64.9  sd 2.8)
+    dont passifs                        60.8%   (min 53.0  max 67.0  sd 4.8)
+    dont moyens                         60.6%   (min 56.8  max 64.8  sd 3.0)
+    dont whales                         49.6%   (min 40.0  max 62.0  sd 6.9)
+  Tick median d'abandon                   43   (min 38  max 55  sd 5)
+  Capital detruit (burn)                50.7%   (min 48.4  max 53.3  sd 2.1)
+    dont taxe d'empire 99%, penalites de bataille 1%, reveals rates 0%
+  Cagnotte non consommee                90.0%   (min 89.7  max 90.2  sd 0.2)
+  Batailles / saison                     750   (min 642  max 904  sd 69)
+  Conquetes / saison                     582   (min 491  max 681  sd 58)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 2.7%  ->  PASS
+
+=== sybil-10  --  chaque whale se decoupe en 10 wallets
+    10 saisons de 126 ticks
+  Part du top wallet                     0.7%   (min 0.5  max 0.9  sd 0.1)
+  Part du top acteur (Sybil agrege)      3.3%   (min 3.0  max 3.5  sd 0.2)
+  Part cumulee du top 10 wallets         5.0%   (min 4.5  max 5.7  sd 0.4)
+  Part de la plus grosse guilde         16.5%   (min 16.1  max 17.2  sd 0.4)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.541   (min 0.527  max 0.557  sd 0.011)
+  Gini territoire (tous wallets)       0.549   (min 0.535  max 0.567  sd 0.011)
+  Gini soldes finaux                   0.504   (min 0.487  max 0.516  sd 0.009)
+  Abandon petits joueurs                59.8%   (min 55.3  max 64.7  sd 3.5)
+    dont passifs                        61.3%   (min 58.0  max 65.0  sd 2.3)
+    dont moyens                         58.6%   (min 48.8  max 65.6  sd 6.1)
+    dont whales                         57.1%   (min 48.8  max 63.4  sd 4.0)
+  Tick median d'abandon                   20   (min 19  max 21  sd 1)
+  Capital detruit (burn)                55.1%   (min 51.4  max 57.8  sd 1.8)
+    dont taxe d'empire 99%, penalites de bataille 1%, reveals rates 0%
+  Cagnotte non consommee                89.9%   (min 89.5  max 90.2  sd 0.2)
+  Batailles / saison                     787   (min 666  max 909  sd 91)
+  Conquetes / saison                     625   (min 539  max 714  sd 69)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 0.9%  ->  PASS
+
+=== sybil-100+conquest-only  --  100 wallets par whale ET position non diluee
+    10 saisons de 126 ticks
+  Part du top wallet                     0.5%   (min 0.1  max 1.1  sd 0.3)
+  Part du top acteur (Sybil agrege)      3.9%   (min 3.7  max 4.1  sd 0.1)
+  Part cumulee du top 10 wallets         2.7%   (min 0.9  max 3.7  sd 0.9)
+  Part de la plus grosse guilde         16.1%   (min 15.2  max 16.8  sd 0.6)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.444   (min 0.364  max 0.497  sd 0.037)
+  Gini territoire (tous wallets)       0.459   (min 0.378  max 0.516  sd 0.039)
+  Gini soldes finaux                   0.453   (min 0.397  max 0.499  sd 0.027)
+  Abandon petits joueurs                59.6%   (min 49.1  max 63.8  sd 4.4)
+    dont passifs                        61.0%   (min 57.0  max 65.5  sd 2.4)
+    dont moyens                         58.5%   (min 40.4  max 68.0  sd 8.5)
+    dont whales                         57.7%   (min 49.4  max 63.6  sd 5.0)
+  Tick median d'abandon                   16   (min 15  max 18  sd 1)
+  Capital detruit (burn)                55.2%   (min 53.2  max 57.7  sd 1.7)
+    dont taxe d'empire 99%, penalites de bataille 1%, reveals rates 0%
+  Cagnotte non consommee                90.2%   (min 89.7  max 91.0  sd 0.4)
+  Batailles / saison                     706   (min 224  max 909  sd 183)
+  Conquetes / saison                     492   (min 214  max 620  sd 138)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 1.1%  ->  PASS
+
+=== guildes-3  --  le brief ne fixe pas le nombre de guildes: on en met 3
+    10 saisons de 126 ticks
+  Part du top wallet                     1.1%   (min 1.0  max 1.2  sd 0.1)
+  Part du top acteur (Sybil agrege)      1.1%   (min 1.0  max 1.2  sd 0.1)
+  Part cumulee du top 10 wallets         9.7%   (min 9.0  max 10.1  sd 0.3)
+  Part de la plus grosse guilde         34.8%   (min 34.0  max 36.0  sd 0.6)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.501   (min 0.484  max 0.511  sd 0.010)
+  Gini territoire (tous wallets)       0.514   (min 0.501  max 0.523  sd 0.009)
+  Gini soldes finaux                   0.690   (min 0.679  max 0.694  sd 0.005)
+  Abandon petits joueurs                51.4%   (min 49.1  max 55.3  sd 1.9)
+    dont passifs                        60.6%   (min 56.0  max 64.0  sd 2.8)
+    dont moyens                         44.0%   (min 42.0  max 48.4  sd 1.9)
+    dont whales                         11.0%   (min 4.0  max 16.0  sd 3.6)
+  Tick median d'abandon                   58   (min 53  max 66  sd 4)
+  Capital detruit (burn)                36.3%   (min 34.6  max 39.1  sd 1.3)
+    dont taxe d'empire 100%, penalites de bataille 0%, reveals rates 0%
+  Cagnotte non consommee                92.5%   (min 92.4  max 92.5  sd 0.0)
+  Batailles / saison                      14   (min 13  max 14  sd 0)
+  Conquetes / saison                      14   (min 13  max 14  sd 0)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 1.2%  ->  PASS
+
+=== whale-solo  --  4 whales montent chacune sa guilde a un membre, position non diluee
+    10 saisons de 126 ticks
+  Part du top wallet                     4.8%   (min 3.7  max 7.3  sd 1.2)
+  Part du top acteur (Sybil agrege)      4.8%   (min 3.7  max 7.3  sd 1.2)
+  Part cumulee du top 10 wallets        22.3%   (min 19.7  max 24.7  sd 1.7)
+  Part de la plus grosse guilde         17.1%   (min 16.5  max 17.7  sd 0.4)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.570   (min 0.552  max 0.586  sd 0.013)
+  Gini territoire (tous wallets)       0.654   (min 0.628  max 0.669  sd 0.011)
+  Gini soldes finaux                   0.725   (min 0.716  max 0.736  sd 0.006)
+  Abandon petits joueurs                48.6%   (min 44.9  max 53.6  sd 3.3)
+    dont passifs                        58.9%   (min 55.5  max 67.0  sd 3.3)
+    dont moyens                         40.4%   (min 33.2  max 50.4  sd 5.7)
+    dont whales                         28.4%   (min 16.0  max 38.0  sd 6.9)
+  Tick median d'abandon                   49   (min 41  max 56  sd 5)
+  Capital detruit (burn)                36.3%   (min 30.5  max 39.4  sd 2.8)
+    dont taxe d'empire 99%, penalites de bataille 1%, reveals rates 0%
+  Cagnotte non consommee                91.2%   (min 90.9  max 91.5  sd 0.2)
+  Batailles / saison                     175   (min 118  max 365  sd 72)
+  Conquetes / saison                     145   (min 101  max 247  sd 46)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         10/10 saisons  pire saison 7.3%  ->  PASS
+
+=== whale-solo-5g  --  guildes solo + peu de guildes concurrentes (3 claims/tick)
+    10 saisons de 126 ticks
+  Part du top wallet                    36.5%   (min 10.8  max 45.9  sd 9.7)
+  Part du top acteur (Sybil agrege)     36.5%   (min 10.8  max 45.9  sd 9.7)
+  Part cumulee du top 10 wallets        56.1%   (min 30.5  max 65.1  sd 9.3)
+  Part de la plus grosse guilde         46.7%   (min 38.2  max 70.2  sd 8.6)
+  Carte restee neutre                    0.9%   (min 0.0  max 4.9  sd 1.9)
+  Gini territoire (detenteurs)         0.744   (min 0.617  max 0.785  sd 0.047)
+  Gini territoire (tous wallets)       0.758   (min 0.634  max 0.803  sd 0.046)
+  Gini soldes finaux                   0.738   (min 0.685  max 0.761  sd 0.020)
+  Abandon petits joueurs                54.6%   (min 51.8  max 58.2  sd 2.3)
+    dont passifs                        62.2%   (min 57.5  max 66.0  sd 3.1)
+    dont moyens                         48.6%   (min 43.2  max 55.2  sd 3.9)
+    dont whales                         10.8%   (min 8.0  max 16.0  sd 2.5)
+  Tick median d'abandon                   59   (min 53  max 65  sd 4)
+  Capital detruit (burn)                35.0%   (min 31.2  max 43.1  sd 4.1)
+    dont taxe d'empire 100%, penalites de bataille 0%, reveals rates 0%
+  Cagnotte non consommee                92.6%   (min 92.4  max 93.3  sd 0.3)
+  Batailles / saison                      43   (min 29  max 58  sd 9)
+  Conquetes / saison                      21   (min 14  max 25  sd 3)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         1/10 saisons  pire saison 45.9%  ->  ECHEC
+
+=== whale-solo-5g-plancher  --  meme cas, hypothese la plus conservatrice: 1 seul claim par tick
+    10 saisons de 126 ticks
+  Part du top wallet                    17.7%   (min 16.5  max 18.5  sd 0.7)
+  Part du top acteur (Sybil agrege)     17.7%   (min 16.5  max 18.5  sd 0.7)
+  Part cumulee du top 10 wallets        41.8%   (min 40.3  max 42.8  sd 0.7)
+  Part de la plus grosse guilde         61.9%   (min 60.9  max 62.9  sd 0.6)
+  Carte restee neutre                    0.0%   (min 0.0  max 0.0  sd 0.0)
+  Gini territoire (detenteurs)         0.664   (min 0.653  max 0.674  sd 0.006)
+  Gini territoire (tous wallets)       0.682   (min 0.673  max 0.693  sd 0.005)
+  Gini soldes finaux                   0.713   (min 0.702  max 0.722  sd 0.006)
+  Abandon petits joueurs                54.7%   (min 52.9  max 58.2  sd 1.7)
+    dont passifs                        62.4%   (min 59.5  max 67.0  sd 2.7)
+    dont moyens                         48.5%   (min 43.6  max 51.2  sd 2.5)
+    dont whales                         11.0%   (min 8.0  max 16.0  sd 2.4)
+  Tick median d'abandon                   62   (min 58  max 68  sd 3)
+  Capital detruit (burn)                32.8%   (min 28.6  max 39.7  sd 3.9)
+    dont taxe d'empire 100%, penalites de bataille 0%, reveals rates 0%
+  Cagnotte non consommee                93.0%   (min 93.0  max 93.1  sd 0.0)
+  Batailles / saison                      29   (min 20  max 48  sd 8)
+  Conquetes / saison                      15   (min 13  max 19  sd 2)
+  Invariant ordre des tx             OK sur toutes les verifications
+  GATE M0 (top wallet < 15%)         0/10 saisons  pire saison 18.5%  ->  ECHEC
+
+================================================================================
+VERDICT M0
+================================================================================
+  base                     top wallet   2.4%   top acteur   2.4%   PASS
+  conquest-only            top wallet   2.7%   top acteur   2.7%   PASS
+  sybil-10                 top wallet   0.9%   top acteur   3.5%   PASS
+  sybil-100+conquest-only  top wallet   1.1%   top acteur   4.1%   PASS
+  guildes-3                top wallet   1.2%   top acteur   1.2%   PASS
+  whale-solo               top wallet   7.3%   top acteur   7.3%   PASS
+  whale-solo-5g            top wallet  45.9%   top acteur  45.9%   ECHEC
+  whale-solo-5g-plancher   top wallet  18.5%   top acteur  18.5%   ECHEC
+
+Le gate porte sur le WALLET. La colonne 'top acteur' agrege les wallets Sybil
+d'un meme acteur: c'est la mesure qui compte reellement, puisque se decouper en
+N wallets est gratuit et multiplie la puissance par sqrt(N).

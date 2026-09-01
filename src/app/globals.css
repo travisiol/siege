@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+/*
+ * SIEGE — 547 hexagones, douze guildes, un tick toutes les huit heures.
+ *
+ * Sol graphite froid, comme une table de guerre sous lampe basse. La couleur
+ * appartient aux guildes: douze teintes qui ne servent qu'à dire « ceci est
+ * tenu, et par qui ». Le neutre reste gris — sur une carte où tout est un
+ * hexagone identique, la teinte doit signifier la possession ou elle ne
+ * signifie rien.
+ *
+ * La braise est rationnée à deux emplois, et à rien d'autre: les 27 hexes de
+ * tier 3 (5 % de la carte, 8x de rendement, jamais adjacents) et le geste
+ * d'engager un ordre. Le reste du jeu est froid; ce qui brûle se paie.
+ *
+ * Le display est lourd et large, comme un logotype de jeu. La donnée est en
+ * mono tabulaire, parce que ce jeu se résout en entiers et que les nombres
+ * doivent se lire comme un relevé, pas comme un argument de vente.
+ */
+:root {
+  --void: #0b0d0f;
+  --field: #14171b;
+  --field-raised: #1c2026;
+  --field-line: #2a2f37;
+
+  --chalk: #ffffff;
+  --chalk-soft: #adb6c2;
+  --chalk-muted: #6f7987;
+
+  --ember: #ff5a1f;
+  --ember-bright: #ff8551;
+  --ember-deep: #b23508;
+
+  --rule: rgba(150, 168, 190, 0.14);
+  --rule-strong: rgba(150, 168, 190, 0.3);
+
+  --gain: #3fcf8e;
+  --loss: #e5484d;
+
+  /*
+   * Les douze guildes. Teintes réparties sur le cercle en évitant la bande
+   * orange, qui appartient à la braise: une guilde ne doit jamais pouvoir
+   * être confondue avec un tier 3.
+   */
+  --g1: #4c8df6;
+  --g2: #1fc7a9;
+  --g3: #a271f2;
+  --g4: #e0b33c;
+  --g5: #48b558;
+  --g6: #ec6aa8;
+  --g7: #57cbe8;
+  --g8: #b9cf46;
+  --g9: #7c86ea;
+  --g10: #e8556b;
+  --g11: #5aa79f;
+  --g12: #c070c8;
+}
+
+@theme inline {
+  --color-void: var(--void);
+  --color-field: var(--field);
+  --color-field-raised: var(--field-raised);
+  --color-field-line: var(--field-line);
+  --color-chalk: var(--chalk);
+  --color-chalk-soft: var(--chalk-soft);
+  --color-chalk-muted: var(--chalk-muted);
+  --color-ember: var(--ember);
+  --color-ember-bright: var(--ember-bright);
+  --color-ember-deep: var(--ember-deep);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+
+  --font-display: "Archivo Black", "Arial Black", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans:
+    "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--void);
+}
+
+body {
+  background: var(--void);
+  color: var(--chalk);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ember);
+  color: var(--void);
+}
+
+/* ---- Type ------------------------------------------------------------ */
+
+/*
+ * Dimensionné contre sa propre colonne, pas contre le viewport: le bloc de
+ * pitch vit dans un rail de ~520px sur desktop et pleine largeur quand la
+ * mise en page s'empile. Un clamp en vw se trompe dans l'un des deux cas.
+ */
+.pitch {
+  container-type: inline-size;
+}
+
+.type-hero {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(44px, 17cqw, 118px);
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/*
+ * Le liseré du logotype. `paint-order` place le contour derrière la glyphe,
+ * sinon le trait mange les pleins et le blanc cesse d'être blanc.
+ */
+.wordmark-outline {
+  -webkit-text-stroke: 6px var(--ember);
+  paint-order: stroke fill;
+}
+
+@media (max-width: 640px) {
+  .wordmark-outline {
+    -webkit-text-stroke-width: 4px;
+  }
+}
+
+.type-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 3.4vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+}
+
+.type-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(17px, 1.9vw, 22px);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Les nombres. Toujours mono, toujours tabulaires. */
+.type-figure {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-figure-sm {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-label {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.type-data {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Les formules se lisent comme du code, parce que c'en est. */
+.type-formula {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Surface ---------------------------------------------------------- */
+
+.panel {
+  background: var(--field);
+  border: 1px solid var(--rule);
+}
+
+.sheet-grid {
+  background-image:
+    linear-gradient(to right, rgba(150, 168, 190, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(150, 168, 190, 0.045) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+
+/* Bandeau. Le contenu est dupliqué: on défile une copie, puis on boucle. */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 48s linear infinite;
+}
+
+/* La phase de résolution: 15 minutes où tout se joue d'un bloc. */
+@keyframes pulse-ember {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.animate-pulse-ember {
+  animation: pulse-ember 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-ticker,
+  .animate-pulse-ember {
+    animation: none;
+  }
+}
