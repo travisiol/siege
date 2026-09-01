@@ -6,31 +6,43 @@ import { guildColor, guildName, NEUTRAL_COLOR } from "@/lib/guilds";
 import { siteConfig } from "@/lib/site-config";
 
 /*
- * The map. Canvas 2D, no 3D library — the brief requires it and it is right:
- * 547 flat hexes draw in a few milliseconds and stay crisp at any zoom.
+ * The map. Canvas 2D, no 3D library — the brief rules one out and it is right:
+ * 547 flat tiles do not need WebGL, and a 2D canvas stays crisp at any zoom with
+ * nothing to install.
  *
- * Two readings, because a newcomer and a player want different things.
+ * The relief is not decoration. Height encodes tier, so the ground that pays
+ * stands up: a tier 3 hex is visibly a block, a tier 1 is nearly flush. That is
+ * one more channel carrying the same fact the colour carries, which is what
+ * makes the map readable at a glance and still readable to someone who cannot
+ * separate the two oranges.
  *
- *   "pays"   — colour by tier. Three shades, one meaning: how much this ground
- *              earns. Free hexes get a dashed outline, so "what is worth having"
- *              and "what can I still buy" are answered in a single look.
+ * Two readings on top of that:
  *
- *   "owners" — colour by guild. Here the INSIDE of a territory is faint and its
- *              BORDERS are strong: filling each guild solid gives an unreadable
- *              stained-glass window, and what a player looks at on a conquest
- *              map is where their colour meets someone else's.
+ *   "pays"   — one hue, three depths of it. Free hexes get a dashed crown, so
+ *              "what is worth having" and "what can I still buy" answer at once.
  *
- * Pointer and keyboard both drive it. This canvas is the primary control of the
- * whole page, so it cannot be pointer-only.
+ *   "owners" — guild colour on the top face. The INSIDE of a territory is faint
+ *              and its BORDERS are strong, because what a player looks at on a
+ *              conquest map is where their colour meets someone else's.
+ *
+ * Drawing is back to front by screen y, so a tile's walls are overdrawn by the
+ * tile in front of it. That painter's ordering is the whole trick — without it
+ * the extrusions cross and the board looks like broken glass.
  */
 
 export type MapMode = "pays" | "owners";
 
 const HEX_ANGLES = Array.from({ length: 6 }, (_, i) => ((60 * i - 30) * Math.PI) / 180);
 
+/** Vertical squash. Just enough to read as a table seen from a low angle. */
+const SQUASH = 0.88;
+
+/** Wall height per tier, as a fraction of the hex size. */
+const TIER_DEPTH: Record<number, number> = { 1: 0.2, 2: 0.46, 3: 0.8 };
+
 /** Corners of a pointy-top hex, clockwise from upper right. */
 function corners(cx: number, cy: number, size: number): [number, number][] {
-  return HEX_ANGLES.map((a) => [cx + size * Math.cos(a), cy + size * Math.sin(a)]);
+  return HEX_ANGLES.map((a) => [cx + size * Math.cos(a), cy + size * Math.sin(a) * SQUASH]);
 }
 
 /**
@@ -42,12 +54,46 @@ const EDGE_FOR_DIRECTION = DIRECTIONS.map((_, i) => {
   return [a, (a + 1) % 6] as const;
 });
 
-/** Tier fill in "pays" mode: one hue, three intensities. Dim = poor, bright = rich. */
-const TIER_FILL: Record<number, string> = {
-  1: "rgba(255, 90, 31, 0.14)",
-  2: "rgba(255, 90, 31, 0.44)",
-  3: "rgba(255, 90, 31, 0.95)",
+/**
+ * The four walls a viewer above and slightly in front can see, as corner pairs.
+ * The two upper edges face away and are never drawn.
+ */
+const FRONT_WALLS: [number, number][] = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+];
+
+/** Light comes from the upper left, so right-hand walls fall away hardest. */
+const WALL_SHADE: number[] = [0.42, 0.5, 0.66, 0.78];
+
+type Rgb = [number, number, number];
+
+/*
+ * Tier 1 sits close to the ground colour on purpose. It is 70% of the board, so
+ * anything brighter turns the whole map into one orange mass and the 27 hexes
+ * that actually matter stop reading at all. Scarcity has to look scarce.
+ */
+const TIER_RGB: Record<number, Rgb> = {
+  1: [44, 24, 17],
+  2: [130, 52, 25],
+  3: [255, 96, 34],
 };
+
+const NEUTRAL_RGB: Rgb = [64, 71, 82];
+
+function hexToRgb(hex: string): Rgb {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function shade([r, g, b]: Rgb, f: number, alpha = 1): string {
+  const c = (v: number) => Math.round(Math.min(255, v * f));
+  return alpha === 1
+    ? `rgb(${c(r)},${c(g)},${c(b)})`
+    : `rgba(${c(r)},${c(g)},${c(b)},${alpha})`;
+}
 
 /** Arrow keys walk the axial grid one column or one row at a time. */
 const KEY_DIRECTION: Record<string, { q: number; r: number }> = {
@@ -107,8 +153,7 @@ export function HexMap({
 
   /*
    * Geometry depends only on the radius: compute it at unit size and apply the
-   * scale when drawing. Resizing the window therefore triggers no layout
-   * recomputation at all.
+   * scale when drawing. Resizing the window recomputes no layout at all.
    */
   const layout = useMemo(() => {
     const unit = 10;
@@ -119,11 +164,14 @@ export function HexMap({
     const maxX = Math.max(...xs) + unit * Math.sqrt(3) * 0.5;
     const minY = Math.min(...ys) - unit;
     const maxY = Math.max(...ys) + unit;
+    // Back to front, so each tile's walls are covered by the tile ahead of it.
+    const order = cells.map((c) => c.id).sort((a, b) => pts[a].y - pts[b].y || pts[a].x - pts[b].x);
     return {
       unit,
       pts,
+      order,
       width: maxX - minX,
-      height: maxY - minY,
+      height: (maxY - minY) * SQUASH,
       cx: (minX + maxX) / 2,
       cy: (minY + maxY) / 2,
     };
@@ -137,7 +185,7 @@ export function HexMap({
       return {
         scale,
         originX: w * bias + pan.x - layout.cx * scale,
-        originY: h * biasY + pan.y - layout.cy * scale,
+        originY: h * biasY + pan.y - layout.cy * scale * SQUASH,
       };
     },
     [layout, zoom, pan, bias, biasY],
@@ -167,91 +215,130 @@ export function HexMap({
 
     const { scale, originX, originY } = viewFor(w, h);
     const size = layout.unit * scale;
-    // Below ~4px apothem the edges merge, so stop drawing them.
+    // Below ~5px the walls collapse into noise; fall back to flat tiles.
+    const relief = size > 5;
     const fine = size > 4;
 
     const at = (id: number) => ({
       x: originX + layout.pts[id].x * scale,
-      y: originY + layout.pts[id].y * scale,
+      y: originY + layout.pts[id].y * scale * SQUASH,
     });
-    const onScreen = (x: number, y: number, pad = 2) =>
+    const onScreen = (x: number, y: number, pad = 3) =>
       x > -size * pad && x < w + size * pad && y > -size * pad && y < h + size * pad;
 
-    const path = (x: number, y: number, s: number) => {
-      const pts = corners(x, y, s);
+    const trace = (pts: [number, number][]) => {
       ctx.beginPath();
       ctx.moveTo(pts[0][0], pts[0][1]);
       for (let i = 1; i < 6; i++) ctx.lineTo(pts[i][0], pts[i][1]);
       ctx.closePath();
-      return pts;
     };
 
-    // --- Fills
-    for (const c of cells) {
-      const { x, y } = at(c.id);
+    const baseRgb = (id: number): Rgb => {
+      if (mode === "pays") return TIER_RGB[tiers[id] ?? 1];
+      const owner = owners[id] ?? 0;
+      return owner === 0 ? NEUTRAL_RGB : hexToRgb(guildColor(owner));
+    };
+
+    // ---- Tiles, back to front.
+    for (const id of layout.order) {
+      const { x, y } = at(id);
       if (!onScreen(x, y)) continue;
 
-      const owner = owners[c.id] ?? 0;
-      const tier = tiers[c.id] ?? 1;
-      const lift = c.id === selectedId ? 1 : c.id === hovered ? 0.6 : 0;
-      path(x, y, size * 0.96);
+      const tier = tiers[id] ?? 1;
+      const owner = owners[id] ?? 0;
+      const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+      const depth = relief ? size * (TIER_DEPTH[tier] + lifted) : 0;
+      const rgb = baseRgb(id);
 
-      if (mode === "pays") {
-        ctx.fillStyle = TIER_FILL[tier];
-        ctx.fill();
-        if (lift > 0) {
-          ctx.fillStyle = "rgba(255,255,255,0.2)";
-          ctx.globalAlpha = lift;
+      // In owners mode the interior stays quiet so the borders can speak.
+      const topAlpha =
+        mode === "pays"
+          ? 1
+          : owner === 0
+            ? 0.62
+            : id === selectedId
+              ? 0.9
+              : id === hovered
+                ? 0.78
+                : 0.52;
+
+      const top = corners(x, y - lifted * size, size * 0.94);
+
+      // Walls first, so the top face sits cleanly on them.
+      //
+      // They are drawn far more opaque than the top face. The interior of a
+      // territory is deliberately quiet, but a translucent wall stops being a
+      // wall — the depth simply vanishes into the background and the board goes
+      // flat. Structure stays solid; only the surface is allowed to be faint.
+      if (relief) {
+        const wallAlpha = Math.min(1, topAlpha + 0.42);
+        for (let i = 0; i < FRONT_WALLS.length; i++) {
+          const [a, b] = FRONT_WALLS[i];
+          ctx.beginPath();
+          ctx.moveTo(top[a][0], top[a][1]);
+          ctx.lineTo(top[b][0], top[b][1]);
+          ctx.lineTo(top[b][0], top[b][1] + depth);
+          ctx.lineTo(top[a][0], top[a][1] + depth);
+          ctx.closePath();
+          ctx.fillStyle = shade(rgb, WALL_SHADE[i], wallAlpha);
           ctx.fill();
-          ctx.globalAlpha = 1;
         }
-      } else if (owner === 0) {
-        // Unclaimed ground has to read as available, not as background.
-        ctx.fillStyle = NEUTRAL_COLOR;
-        ctx.globalAlpha = 0.55 + lift * 0.4;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else {
-        ctx.fillStyle = guildColor(owner);
-        ctx.globalAlpha = 0.3 + lift * 0.32;
-        ctx.fill();
-        ctx.globalAlpha = 1;
+      }
+
+      // Top face.
+      trace(top);
+      ctx.fillStyle = shade(rgb, 1, topAlpha);
+      ctx.fill();
+
+      // A single bright edge along the lit side reads as a bevel for almost nothing.
+      if (relief) {
+        ctx.beginPath();
+        ctx.moveTo(top[4][0], top[4][1]);
+        ctx.lineTo(top[5][0], top[5][1]);
+        ctx.lineTo(top[0][0], top[0][1]);
+        ctx.strokeStyle = shade(rgb, 1.32, 0.45);
+        ctx.lineWidth = Math.max(1, size * 0.06);
+        ctx.stroke();
       }
 
       if (fine) {
-        ctx.strokeStyle = "rgba(150,168,190,0.13)";
+        trace(top);
+        ctx.strokeStyle = "rgba(8,10,12,0.7)";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
     }
 
-    // --- Free ground. In "pays" mode this dashed ring is the call to action.
+    // ---- Free ground. In "pays" mode this dashed crown is the call to action.
     if (fine && mode === "pays") {
-      ctx.setLineDash([size * 0.22, size * 0.16]);
-      ctx.strokeStyle = "rgba(255,255,255,0.78)";
-      ctx.lineWidth = Math.max(1, size * 0.09);
-      for (const c of cells) {
-        if ((owners[c.id] ?? 0) !== 0) continue;
-        const { x, y } = at(c.id);
+      ctx.setLineDash([size * 0.2, size * 0.15]);
+      ctx.strokeStyle = "rgba(255,255,255,0.8)";
+      ctx.lineWidth = Math.max(1, size * 0.08);
+      for (const id of layout.order) {
+        if ((owners[id] ?? 0) !== 0) continue;
+        const { x, y } = at(id);
         if (!onScreen(x, y)) continue;
-        path(x, y, size * 0.8);
+        const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+        trace(corners(x, y - lifted * size, size * 0.72));
         ctx.stroke();
       }
       ctx.setLineDash([]);
     }
 
-    // --- Borders. An edge is drawn only if it separates two sides.
+    // ---- Borders. An edge is drawn only where two sides actually meet.
     if (fine && mode === "owners") {
       ctx.lineCap = "round";
-      for (const c of cells) {
-        const owner = owners[c.id] ?? 0;
+      for (const id of layout.order) {
+        const owner = owners[id] ?? 0;
         if (owner === 0) continue;
-        const { x, y } = at(c.id);
+        const { x, y } = at(id);
         if (!onScreen(x, y)) continue;
 
-        const pts = corners(x, y, size * 0.96);
+        const c = cells[id];
+        const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+        const top = corners(x, y - lifted * size, size * 0.94);
         ctx.strokeStyle = guildColor(owner);
-        ctx.lineWidth = Math.max(1.4, size * 0.16);
+        ctx.lineWidth = Math.max(1.4, size * 0.15);
 
         for (let d = 0; d < 6; d++) {
           const nb = byKey.get(`${c.q + DIRECTIONS[d].q},${c.r + DIRECTIONS[d].r}`);
@@ -259,53 +346,57 @@ export function HexMap({
           if (nbOwner === owner) continue; // internal edge: let it disappear
           const [a, b] = EDGE_FOR_DIRECTION[d];
           ctx.beginPath();
-          ctx.moveTo(pts[a][0], pts[a][1]);
-          ctx.lineTo(pts[b][0], pts[b][1]);
+          ctx.moveTo(top[a][0], top[a][1]);
+          ctx.lineTo(top[b][0], top[b][1]);
           ctx.stroke();
         }
       }
     }
 
-    // --- Tier marks. Owners mode only; in "pays" the fill already says it.
+    // ---- Tier marks in owners mode; in "pays" the height and hue already say it.
     if (mode === "owners") {
-      for (const c of cells) {
-        const tier = tiers[c.id] ?? 1;
+      for (const id of layout.order) {
+        const tier = tiers[id] ?? 1;
         if (tier === 1) continue;
-        const { x, y } = at(c.id);
+        const { x, y } = at(id);
         if (!onScreen(x, y, 1)) continue;
+        const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+        const cy = y - lifted * size;
 
         if (tier === 3) {
           ctx.beginPath();
-          ctx.arc(x, y, Math.max(1.8, size * 0.26), 0, Math.PI * 2);
+          ctx.arc(x, cy, Math.max(1.8, size * 0.24), 0, Math.PI * 2);
           ctx.strokeStyle = "#ff5a1f";
           ctx.lineWidth = Math.max(1.2, size * 0.1);
           ctx.stroke();
         } else if (fine) {
           ctx.beginPath();
-          ctx.arc(x, y, Math.max(1, size * 0.11), 0, Math.PI * 2);
+          ctx.arc(x, cy, Math.max(1, size * 0.1), 0, Math.PI * 2);
           ctx.fillStyle = "rgba(255,255,255,0.34)";
           ctx.fill();
         }
       }
     }
 
-    // --- Refuges. Unattackable, so they get a solid white ring.
+    // ---- Refuges. Unattackable, so they wear a solid white crown.
     for (const id of refugeSet) {
       const { x, y } = at(id);
       if (!onScreen(x, y, 1)) continue;
-      path(x, y, size * 0.62);
-      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+      trace(corners(x, y - lifted * size, size * 0.58));
+      ctx.strokeStyle = "rgba(255,255,255,0.88)";
       ctx.lineWidth = Math.max(1, size * 0.09);
       ctx.stroke();
     }
 
-    // --- Hover and selection, above everything else.
+    // ---- Hover and selection, above everything.
     for (const id of [hovered, selectedId]) {
       if (id === null || id === undefined) continue;
       const { x, y } = at(id);
-      path(x, y, size * (id === selectedId ? 1.14 : 1.02));
-      ctx.strokeStyle = id === selectedId ? "#ffffff" : "rgba(255,255,255,0.6)";
-      ctx.lineWidth = id === selectedId ? Math.max(2, size * 0.14) : 1.5;
+      const lifted = id === selectedId ? 0.34 : 0.16;
+      trace(corners(x, y - lifted * size, size * (id === selectedId ? 1.08 : 1.0)));
+      ctx.strokeStyle = id === selectedId ? "#ffffff" : "rgba(255,255,255,0.65)";
+      ctx.lineWidth = id === selectedId ? Math.max(2, size * 0.13) : 1.5;
       ctx.stroke();
     }
   }, [cells, owners, tiers, refugeSet, byKey, layout, viewFor, hovered, selectedId, mode]);
@@ -322,7 +413,14 @@ export function HexMap({
     return () => ro.disconnect();
   }, [draw]);
 
-  /** Screen -> hex id, or null off the map. */
+  /**
+   * Screen -> hex id.
+   *
+   * The extrusion goes DOWNWARD from the top face, which is drawn on the hex's
+   * own centre. That is the reason it goes downward: the logical centre and the
+   * visible face stay in the same place, so hit-testing needs no correction for
+   * a height that varies by tier.
+   */
   const hexAt = useCallback(
     (clientX: number, clientY: number): number | null => {
       const wrap = wrapRef.current;
@@ -330,7 +428,7 @@ export function HexMap({
       const rect = wrap.getBoundingClientRect();
       const { scale, originX, originY } = viewFor(rect.width, rect.height);
       const wx = (clientX - rect.left - originX) / scale;
-      const wy = (clientY - rect.top - originY) / scale;
+      const wy = (clientY - rect.top - originY) / (scale * SQUASH);
       const { q, r } = pixelToAxial(wx, wy, layout.unit);
       return byKey.get(`${q},${r}`) ?? null;
     },
@@ -346,7 +444,7 @@ export function HexMap({
       const { scale, originX, originY } = viewFor(rect.width, rect.height);
       setTipAt({
         x: originX + layout.pts[id].x * scale,
-        y: originY + layout.pts[id].y * scale,
+        y: originY + layout.pts[id].y * scale * SQUASH,
       });
     },
     [viewFor, layout],
@@ -417,7 +515,6 @@ export function HexMap({
           const step = KEY_DIRECTION[e.key];
           if (!step) return;
           e.preventDefault();
-          // Start from the centre so the first key press always lands somewhere.
           const from = hovered ?? selectedId ?? 0;
           const cell = cells[from];
           const next = byKey.get(`${cell.q + step.q},${cell.r + step.r}`);
@@ -441,7 +538,7 @@ export function HexMap({
       */}
       {tip && (
         <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+14px)] border border-rule-strong bg-void/95 px-3 py-2 backdrop-blur-sm"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+18px)] border border-rule-strong bg-void/95 px-3 py-2 backdrop-blur-sm"
           style={{ left: tip.x, top: tip.y }}
         >
           <div className="flex items-center gap-2 whitespace-nowrap">

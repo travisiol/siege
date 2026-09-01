@@ -900,10 +900,16 @@ var _s = __turbopack_context__.k.signature();
 const HEX_ANGLES = Array.from({
     length: 6
 }, (_, i)=>(60 * i - 30) * Math.PI / 180);
+/** Vertical squash. Just enough to read as a table seen from a low angle. */ const SQUASH = 0.88;
+/** Wall height per tier, as a fraction of the hex size. */ const TIER_DEPTH = {
+    1: 0.2,
+    2: 0.46,
+    3: 0.8
+};
 /** Corners of a pointy-top hex, clockwise from upper right. */ function corners(cx, cy, size) {
     return HEX_ANGLES.map((a)=>[
             cx + size * Math.cos(a),
-            cy + size * Math.sin(a)
+            cy + size * Math.sin(a) * SQUASH
         ]);
 }
 /**
@@ -917,11 +923,71 @@ const HEX_ANGLES = Array.from({
     ];
 });
 _c1 = EDGE_FOR_DIRECTION;
-/** Tier fill in "pays" mode: one hue, three intensities. Dim = poor, bright = rich. */ const TIER_FILL = {
-    1: "rgba(255, 90, 31, 0.14)",
-    2: "rgba(255, 90, 31, 0.44)",
-    3: "rgba(255, 90, 31, 0.95)"
+/**
+ * The four walls a viewer above and slightly in front can see, as corner pairs.
+ * The two upper edges face away and are never drawn.
+ */ const FRONT_WALLS = [
+    [
+        0,
+        1
+    ],
+    [
+        1,
+        2
+    ],
+    [
+        2,
+        3
+    ],
+    [
+        3,
+        4
+    ]
+];
+/** Light comes from the upper left, so right-hand walls fall away hardest. */ const WALL_SHADE = [
+    0.42,
+    0.5,
+    0.66,
+    0.78
+];
+/*
+ * Tier 1 sits close to the ground colour on purpose. It is 70% of the board, so
+ * anything brighter turns the whole map into one orange mass and the 27 hexes
+ * that actually matter stop reading at all. Scarcity has to look scarce.
+ */ const TIER_RGB = {
+    1: [
+        44,
+        24,
+        17
+    ],
+    2: [
+        130,
+        52,
+        25
+    ],
+    3: [
+        255,
+        96,
+        34
+    ]
 };
+const NEUTRAL_RGB = [
+    64,
+    71,
+    82
+];
+function hexToRgb(hex) {
+    const n = parseInt(hex.replace("#", ""), 16);
+    return [
+        n >> 16 & 255,
+        n >> 8 & 255,
+        n & 255
+    ];
+}
+function shade([r, g, b], f, alpha = 1) {
+    const c = (v)=>Math.round(Math.min(255, v * f));
+    return alpha === 1 ? `rgb(${c(r)},${c(g)},${c(b)})` : `rgba(${c(r)},${c(g)},${c(b)},${alpha})`;
+}
 /** Arrow keys walk the axial grid one column or one row at a time. */ const KEY_DIRECTION = {
     ArrowRight: {
         q: 1,
@@ -972,8 +1038,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
     ]);
     /*
    * Geometry depends only on the radius: compute it at unit size and apply the
-   * scale when drawing. Resizing the window therefore triggers no layout
-   * recomputation at all.
+   * scale when drawing. Resizing the window recomputes no layout at all.
    */ const layout = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
         "HexMap.useMemo[layout]": ()=>{
             const unit = 10;
@@ -990,11 +1055,18 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
             const maxX = Math.max(...xs) + unit * Math.sqrt(3) * 0.5;
             const minY = Math.min(...ys) - unit;
             const maxY = Math.max(...ys) + unit;
+            // Back to front, so each tile's walls are covered by the tile ahead of it.
+            const order = cells.map({
+                "HexMap.useMemo[layout].order": (c)=>c.id
+            }["HexMap.useMemo[layout].order"]).sort({
+                "HexMap.useMemo[layout].order": (a, b)=>pts[a].y - pts[b].y || pts[a].x - pts[b].x
+            }["HexMap.useMemo[layout].order"]);
             return {
                 unit,
                 pts,
+                order,
                 width: maxX - minX,
-                height: maxY - minY,
+                height: (maxY - minY) * SQUASH,
                 cx: (minX + maxX) / 2,
                 cy: (minY + maxY) / 2
             };
@@ -1009,7 +1081,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
             return {
                 scale,
                 originX: w * bias + pan.x - layout.cx * scale,
-                originY: h * biasY + pan.y - layout.cy * scale
+                originY: h * biasY + pan.y - layout.cy * scale * SQUASH
             };
         }
     }["HexMap.useCallback[viewFor]"], [
@@ -1040,142 +1112,173 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
             ctx.clearRect(0, 0, w, h);
             const { scale, originX, originY } = viewFor(w, h);
             const size = layout.unit * scale;
-            // Below ~4px apothem the edges merge, so stop drawing them.
+            // Below ~5px the walls collapse into noise; fall back to flat tiles.
+            const relief = size > 5;
             const fine = size > 4;
             const at = {
                 "HexMap.useCallback[draw].at": (id)=>({
                         x: originX + layout.pts[id].x * scale,
-                        y: originY + layout.pts[id].y * scale
+                        y: originY + layout.pts[id].y * scale * SQUASH
                     })
             }["HexMap.useCallback[draw].at"];
             const onScreen = {
-                "HexMap.useCallback[draw].onScreen": (x, y, pad = 2)=>x > -size * pad && x < w + size * pad && y > -size * pad && y < h + size * pad
+                "HexMap.useCallback[draw].onScreen": (x, y, pad = 3)=>x > -size * pad && x < w + size * pad && y > -size * pad && y < h + size * pad
             }["HexMap.useCallback[draw].onScreen"];
-            const path = {
-                "HexMap.useCallback[draw].path": (x, y, s)=>{
-                    const pts = corners(x, y, s);
+            const trace = {
+                "HexMap.useCallback[draw].trace": (pts)=>{
                     ctx.beginPath();
                     ctx.moveTo(pts[0][0], pts[0][1]);
                     for(let i = 1; i < 6; i++)ctx.lineTo(pts[i][0], pts[i][1]);
                     ctx.closePath();
-                    return pts;
                 }
-            }["HexMap.useCallback[draw].path"];
-            // --- Fills
-            for (const c of cells){
-                const { x, y } = at(c.id);
+            }["HexMap.useCallback[draw].trace"];
+            const baseRgb = {
+                "HexMap.useCallback[draw].baseRgb": (id)=>{
+                    if (mode === "pays") return TIER_RGB[tiers[id] ?? 1];
+                    const owner = owners[id] ?? 0;
+                    return owner === 0 ? NEUTRAL_RGB : hexToRgb((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["guildColor"])(owner));
+                }
+            }["HexMap.useCallback[draw].baseRgb"];
+            // ---- Tiles, back to front.
+            for (const id of layout.order){
+                const { x, y } = at(id);
                 if (!onScreen(x, y)) continue;
-                const owner = owners[c.id] ?? 0;
-                const tier = tiers[c.id] ?? 1;
-                const lift = c.id === selectedId ? 1 : c.id === hovered ? 0.6 : 0;
-                path(x, y, size * 0.96);
-                if (mode === "pays") {
-                    ctx.fillStyle = TIER_FILL[tier];
-                    ctx.fill();
-                    if (lift > 0) {
-                        ctx.fillStyle = "rgba(255,255,255,0.2)";
-                        ctx.globalAlpha = lift;
+                const tier = tiers[id] ?? 1;
+                const owner = owners[id] ?? 0;
+                const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+                const depth = relief ? size * (TIER_DEPTH[tier] + lifted) : 0;
+                const rgb = baseRgb(id);
+                // In owners mode the interior stays quiet so the borders can speak.
+                const topAlpha = mode === "pays" ? 1 : owner === 0 ? 0.62 : id === selectedId ? 0.9 : id === hovered ? 0.78 : 0.52;
+                const top = corners(x, y - lifted * size, size * 0.94);
+                // Walls first, so the top face sits cleanly on them.
+                //
+                // They are drawn far more opaque than the top face. The interior of a
+                // territory is deliberately quiet, but a translucent wall stops being a
+                // wall — the depth simply vanishes into the background and the board goes
+                // flat. Structure stays solid; only the surface is allowed to be faint.
+                if (relief) {
+                    const wallAlpha = Math.min(1, topAlpha + 0.42);
+                    for(let i = 0; i < FRONT_WALLS.length; i++){
+                        const [a, b] = FRONT_WALLS[i];
+                        ctx.beginPath();
+                        ctx.moveTo(top[a][0], top[a][1]);
+                        ctx.lineTo(top[b][0], top[b][1]);
+                        ctx.lineTo(top[b][0], top[b][1] + depth);
+                        ctx.lineTo(top[a][0], top[a][1] + depth);
+                        ctx.closePath();
+                        ctx.fillStyle = shade(rgb, WALL_SHADE[i], wallAlpha);
                         ctx.fill();
-                        ctx.globalAlpha = 1;
                     }
-                } else if (owner === 0) {
-                    // Unclaimed ground has to read as available, not as background.
-                    ctx.fillStyle = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["NEUTRAL_COLOR"];
-                    ctx.globalAlpha = 0.55 + lift * 0.4;
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                } else {
-                    ctx.fillStyle = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["guildColor"])(owner);
-                    ctx.globalAlpha = 0.3 + lift * 0.32;
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
+                }
+                // Top face.
+                trace(top);
+                ctx.fillStyle = shade(rgb, 1, topAlpha);
+                ctx.fill();
+                // A single bright edge along the lit side reads as a bevel for almost nothing.
+                if (relief) {
+                    ctx.beginPath();
+                    ctx.moveTo(top[4][0], top[4][1]);
+                    ctx.lineTo(top[5][0], top[5][1]);
+                    ctx.lineTo(top[0][0], top[0][1]);
+                    ctx.strokeStyle = shade(rgb, 1.32, 0.45);
+                    ctx.lineWidth = Math.max(1, size * 0.06);
+                    ctx.stroke();
                 }
                 if (fine) {
-                    ctx.strokeStyle = "rgba(150,168,190,0.13)";
+                    trace(top);
+                    ctx.strokeStyle = "rgba(8,10,12,0.7)";
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }
             }
-            // --- Free ground. In "pays" mode this dashed ring is the call to action.
+            // ---- Free ground. In "pays" mode this dashed crown is the call to action.
             if (fine && mode === "pays") {
                 ctx.setLineDash([
-                    size * 0.22,
-                    size * 0.16
+                    size * 0.2,
+                    size * 0.15
                 ]);
-                ctx.strokeStyle = "rgba(255,255,255,0.78)";
-                ctx.lineWidth = Math.max(1, size * 0.09);
-                for (const c of cells){
-                    if ((owners[c.id] ?? 0) !== 0) continue;
-                    const { x, y } = at(c.id);
+                ctx.strokeStyle = "rgba(255,255,255,0.8)";
+                ctx.lineWidth = Math.max(1, size * 0.08);
+                for (const id of layout.order){
+                    if ((owners[id] ?? 0) !== 0) continue;
+                    const { x, y } = at(id);
                     if (!onScreen(x, y)) continue;
-                    path(x, y, size * 0.8);
+                    const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+                    trace(corners(x, y - lifted * size, size * 0.72));
                     ctx.stroke();
                 }
                 ctx.setLineDash([]);
             }
-            // --- Borders. An edge is drawn only if it separates two sides.
+            // ---- Borders. An edge is drawn only where two sides actually meet.
             if (fine && mode === "owners") {
                 ctx.lineCap = "round";
-                for (const c of cells){
-                    const owner = owners[c.id] ?? 0;
+                for (const id of layout.order){
+                    const owner = owners[id] ?? 0;
                     if (owner === 0) continue;
-                    const { x, y } = at(c.id);
+                    const { x, y } = at(id);
                     if (!onScreen(x, y)) continue;
-                    const pts = corners(x, y, size * 0.96);
+                    const c = cells[id];
+                    const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+                    const top = corners(x, y - lifted * size, size * 0.94);
                     ctx.strokeStyle = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["guildColor"])(owner);
-                    ctx.lineWidth = Math.max(1.4, size * 0.16);
+                    ctx.lineWidth = Math.max(1.4, size * 0.15);
                     for(let d = 0; d < 6; d++){
                         const nb = byKey.get(`${c.q + __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DIRECTIONS"][d].q},${c.r + __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DIRECTIONS"][d].r}`);
                         const nbOwner = nb === undefined ? -1 : owners[nb] ?? 0;
                         if (nbOwner === owner) continue; // internal edge: let it disappear
                         const [a, b] = EDGE_FOR_DIRECTION[d];
                         ctx.beginPath();
-                        ctx.moveTo(pts[a][0], pts[a][1]);
-                        ctx.lineTo(pts[b][0], pts[b][1]);
+                        ctx.moveTo(top[a][0], top[a][1]);
+                        ctx.lineTo(top[b][0], top[b][1]);
                         ctx.stroke();
                     }
                 }
             }
-            // --- Tier marks. Owners mode only; in "pays" the fill already says it.
+            // ---- Tier marks in owners mode; in "pays" the height and hue already say it.
             if (mode === "owners") {
-                for (const c of cells){
-                    const tier = tiers[c.id] ?? 1;
+                for (const id of layout.order){
+                    const tier = tiers[id] ?? 1;
                     if (tier === 1) continue;
-                    const { x, y } = at(c.id);
+                    const { x, y } = at(id);
                     if (!onScreen(x, y, 1)) continue;
+                    const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+                    const cy = y - lifted * size;
                     if (tier === 3) {
                         ctx.beginPath();
-                        ctx.arc(x, y, Math.max(1.8, size * 0.26), 0, Math.PI * 2);
+                        ctx.arc(x, cy, Math.max(1.8, size * 0.24), 0, Math.PI * 2);
                         ctx.strokeStyle = "#ff5a1f";
                         ctx.lineWidth = Math.max(1.2, size * 0.1);
                         ctx.stroke();
                     } else if (fine) {
                         ctx.beginPath();
-                        ctx.arc(x, y, Math.max(1, size * 0.11), 0, Math.PI * 2);
+                        ctx.arc(x, cy, Math.max(1, size * 0.1), 0, Math.PI * 2);
                         ctx.fillStyle = "rgba(255,255,255,0.34)";
                         ctx.fill();
                     }
                 }
             }
-            // --- Refuges. Unattackable, so they get a solid white ring.
+            // ---- Refuges. Unattackable, so they wear a solid white crown.
             for (const id of refugeSet){
                 const { x, y } = at(id);
                 if (!onScreen(x, y, 1)) continue;
-                path(x, y, size * 0.62);
-                ctx.strokeStyle = "rgba(255,255,255,0.85)";
+                const lifted = id === selectedId ? 0.34 : id === hovered ? 0.16 : 0;
+                trace(corners(x, y - lifted * size, size * 0.58));
+                ctx.strokeStyle = "rgba(255,255,255,0.88)";
                 ctx.lineWidth = Math.max(1, size * 0.09);
                 ctx.stroke();
             }
-            // --- Hover and selection, above everything else.
+            // ---- Hover and selection, above everything.
             for (const id of [
                 hovered,
                 selectedId
             ]){
                 if (id === null || id === undefined) continue;
                 const { x, y } = at(id);
-                path(x, y, size * (id === selectedId ? 1.14 : 1.02));
-                ctx.strokeStyle = id === selectedId ? "#ffffff" : "rgba(255,255,255,0.6)";
-                ctx.lineWidth = id === selectedId ? Math.max(2, size * 0.14) : 1.5;
+                const lifted = id === selectedId ? 0.34 : 0.16;
+                trace(corners(x, y - lifted * size, size * (id === selectedId ? 1.08 : 1.0)));
+                ctx.strokeStyle = id === selectedId ? "#ffffff" : "rgba(255,255,255,0.65)";
+                ctx.lineWidth = id === selectedId ? Math.max(2, size * 0.13) : 1.5;
                 ctx.stroke();
             }
         }
@@ -1213,14 +1316,21 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
     }["HexMap.useEffect"], [
         draw
     ]);
-    /** Screen -> hex id, or null off the map. */ const hexAt = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+    /**
+   * Screen -> hex id.
+   *
+   * The extrusion goes DOWNWARD from the top face, which is drawn on the hex's
+   * own centre. That is the reason it goes downward: the logical centre and the
+   * visible face stay in the same place, so hit-testing needs no correction for
+   * a height that varies by tier.
+   */ const hexAt = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "HexMap.useCallback[hexAt]": (clientX, clientY)=>{
             const wrap = wrapRef.current;
             if (!wrap) return null;
             const rect = wrap.getBoundingClientRect();
             const { scale, originX, originY } = viewFor(rect.width, rect.height);
             const wx = (clientX - rect.left - originX) / scale;
-            const wy = (clientY - rect.top - originY) / scale;
+            const wy = (clientY - rect.top - originY) / (scale * SQUASH);
             const { q, r } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["pixelToAxial"])(wx, wy, layout.unit);
             return byKey.get(`${q},${r}`) ?? null;
         }
@@ -1237,7 +1347,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
             const { scale, originX, originY } = viewFor(rect.width, rect.height);
             setTipAt({
                 x: originX + layout.pts[id].x * scale,
-                y: originY + layout.pts[id].y * scale
+                y: originY + layout.pts[id].y * scale * SQUASH
             });
         }
     }["HexMap.useCallback[tipOnHex]"], [
@@ -1325,7 +1435,6 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                     const step = KEY_DIRECTION[e.key];
                     if (!step) return;
                     e.preventDefault();
-                    // Start from the centre so the first key press always lands somewhere.
                     const from = hovered ?? selectedId ?? 0;
                     const cell = cells[from];
                     const next = byKey.get(`${cell.q + step.q},${cell.r + step.r}`);
@@ -1343,11 +1452,11 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                 onBlur: ()=>setTipAt(null)
             }, void 0, false, {
                 fileName: "[project]/src/components/HexMap.tsx",
-                lineNumber: 364,
+                lineNumber: 462,
                 columnNumber: 7
             }, this),
             tip && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+14px)] border border-rule-strong bg-void/95 px-3 py-2 backdrop-blur-sm",
+                className: "pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+18px)] border border-rule-strong bg-void/95 px-3 py-2 backdrop-blur-sm",
                 style: {
                     left: tip.x,
                     top: tip.y
@@ -1363,7 +1472,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 448,
+                                lineNumber: 545,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1371,13 +1480,13 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 children: tipOwner === 0 ? "Free to take" : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["guildName"])(tipOwner)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 452,
+                                lineNumber: 549,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 447,
+                        lineNumber: 544,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1388,7 +1497,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TIER_YIELD"][tipTier] * yieldUnit * ticksPerDay
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 457,
+                                lineNumber: 554,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1399,13 +1508,13 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 460,
+                                lineNumber: 557,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 456,
+                        lineNumber: 553,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1413,19 +1522,19 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                         children: tipOwner === 0 ? `Costs ${tipTier * 100} to claim` : `${(treasury[tip.id] ?? 0).toLocaleString("en-US")} in treasury`
                     }, void 0, false, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 464,
+                        lineNumber: 561,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/HexMap.tsx",
-                lineNumber: 443,
+                lineNumber: 540,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/HexMap.tsx",
-        lineNumber: 363,
+        lineNumber: 461,
         columnNumber: 5
     }, this);
 }

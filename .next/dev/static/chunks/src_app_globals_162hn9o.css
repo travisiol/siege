@@ -308,6 +308,10 @@
     pointer-events: none;
   }
 
+  .collapse {
+    visibility: collapse;
+  }
+
   .visible {
     visibility: visible;
   }
@@ -651,6 +655,11 @@
 
   .-translate-y-\[calc\(100\%\+14px\)\] {
     --tw-translate-y: calc(calc(100% + 14px) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+
+  .-translate-y-\[calc\(100\%\+18px\)\] {
+    --tw-translate-y: calc(calc(100% + 18px) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
 
