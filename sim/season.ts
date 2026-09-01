@@ -18,7 +18,12 @@ function shuffled<T>(arr: T[], seed: number): T[] {
   return a;
 }
 
-export function runSeason(cfg: Config, seed: number): World {
+/**
+ * @param traceTick When set, that tick's battles are recorded blow by blow on
+ *        `w.trace` for the resolution screen. Off by default so the ten-season
+ *        sweep pays nothing for it.
+ */
+export function runSeason(cfg: Config, seed: number, traceTick = 0): World {
   const w = createWorld(cfg, seed);
 
   for (let t = 1; t <= cfg.ticksPerSeason; t++) {
@@ -67,7 +72,8 @@ export function runSeason(cfg: Config, seed: number): World {
     }
 
     // --- Resolution
-    const eff = resolveTick(w, snap, valid, activeByGuild, t);
+    const eff = resolveTick(w, snap, valid, activeByGuild, t, t === traceTick);
+    if (eff.trace) w.trace = eff.trace;
 
     // Invariant M1 prouve des M0: rejouer le tick dans un autre ordre de transactions
     // doit donner exactement le meme resultat.

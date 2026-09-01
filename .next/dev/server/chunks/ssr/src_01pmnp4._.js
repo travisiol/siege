@@ -871,7 +871,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/hexmap.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/guilds.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$site$2d$config$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/site-config.ts [app-ssr] (ecmascript)");
 "use client";
+;
 ;
 ;
 ;
@@ -1201,7 +1203,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                 ref: canvasRef,
                 tabIndex: 0,
                 role: "application",
-                "aria-label": "SIEGE map, 547 hexes. Arrow keys move between hexes, Enter opens the hex sheet.",
+                "aria-label": `${__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$site$2d$config$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["siteConfig"].name} map, 547 hexes. Arrow keys move between hexes, Enter opens the hex sheet.`,
                 className: "outline-none focus-visible:ring-2 focus-visible:ring-ember",
                 style: {
                     cursor: hovered !== null ? "pointer" : "grab",
@@ -1284,7 +1286,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                 onBlur: ()=>setTipAt(null)
             }, void 0, false, {
                 fileName: "[project]/src/components/HexMap.tsx",
-                lineNumber: 363,
+                lineNumber: 364,
                 columnNumber: 7
             }, this),
             tip && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1304,7 +1306,7 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 447,
+                                lineNumber: 448,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1312,13 +1314,13 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 children: tipOwner === 0 ? "Free to take" : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$guilds$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["guildName"])(tipOwner)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 451,
+                                lineNumber: 452,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 446,
+                        lineNumber: 447,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1329,21 +1331,24 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                                 children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$hexmap$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TIER_YIELD"][tipTier] * yieldUnit * ticksPerDay
                             }, void 0, false, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 456,
+                                lineNumber: 457,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "type-label ml-1.5 text-chalk-muted",
-                                children: "$SIEGE / day"
-                            }, void 0, false, {
+                                children: [
+                                    __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$site$2d$config$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["siteConfig"].ticker,
+                                    " / day"
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/components/HexMap.tsx",
-                                lineNumber: 459,
+                                lineNumber: 460,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 455,
+                        lineNumber: 456,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1351,19 +1356,19 @@ function HexMap({ owners, tiers, refuges, treasury, yieldUnit, ticksPerDay, radi
                         children: tipOwner === 0 ? `Costs ${tipTier * 100} to claim` : `${(treasury[tip.id] ?? 0).toLocaleString("en-US")} in treasury`
                     }, void 0, false, {
                         fileName: "[project]/src/components/HexMap.tsx",
-                        lineNumber: 461,
+                        lineNumber: 464,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/HexMap.tsx",
-                lineNumber: 442,
+                lineNumber: 443,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/HexMap.tsx",
-        lineNumber: 362,
+        lineNumber: 363,
         columnNumber: 5
     }, this);
 }
@@ -3050,7 +3055,7 @@ const PHASES = [
         blurb: "Every battle on the map resolves at once."
     }
 ];
-/** Demonstration anchor. Fixed, so the cadence is reproducible. */ const ANCHOR = Date.parse(process.env.NEXT_PUBLIC_SIEGE_SEASON_START ?? "2026-08-24T00:00:00Z");
+/** Demonstration anchor. Fixed, so the cadence is reproducible. */ const ANCHOR = Date.parse(process.env.NEXT_PUBLIC_HEXWAR_SEASON_START ?? "2026-08-24T00:00:00Z");
 function tickStateAt(now) {
     const elapsed = Math.max(0, Math.floor((now - ANCHOR) / 1000));
     const intoTick = elapsed % TICK_SECONDS;

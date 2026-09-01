@@ -6,18 +6,18 @@
  * the metadata all read these three strings.
  */
 export const siteConfig = {
-  // Placeholder name — not final.
-  name: "SIEGE",
-  wordmark: "Siege",
-  ticker: "$SIEGE",
+  name: "HEXWAR",
+  wordmark: "Hexwar",
+  // $HEX is a major existing token; $HXW is the short alternative if wanted.
+  ticker: "$HEXWAR",
   tagline: "Hold ground. Get paid every 8 hours.",
   description:
     "An onchain territory game. Guilds stake tokens on hexes, attack in turns, and the winner takes the treasury. Every battle resolves in integer arithmetic — no randomness anywhere.",
   seoDescription:
     "547 hexes, twelve guilds, one turn every eight hours. Hold a hex and it pays yield three times a day; take one and its whole treasury moves to you.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://siege.example",
-  x: process.env.NEXT_PUBLIC_SIEGE_X ?? null,
-  discord: process.env.NEXT_PUBLIC_SIEGE_DISCORD ?? null,
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://hexwar.example",
+  x: process.env.NEXT_PUBLIC_HEXWAR_X ?? null,
+  discord: process.env.NEXT_PUBLIC_HEXWAR_DISCORD ?? null,
 } as const;
 
 function envOrNull(value: string | undefined): string | null {
@@ -30,11 +30,11 @@ function envOrNull(value: string | undefined): string | null {
  * invented address or price can ship to production.
  */
 export const chainConfig = {
-  network: process.env.NEXT_PUBLIC_SIEGE_NETWORK ?? "Base Sepolia",
+  network: process.env.NEXT_PUBLIC_HEXWAR_NETWORK ?? "Base Sepolia",
   battleAddress: envOrNull(
-    process.env.NEXT_PUBLIC_SIEGE_BATTLE_ADDRESS,
+    process.env.NEXT_PUBLIC_HEXWAR_BATTLE_ADDRESS,
   ) as `0x${string}` | null,
-  isLive: process.env.NEXT_PUBLIC_SIEGE_LIVE === "true",
+  isLive: process.env.NEXT_PUBLIC_HEXWAR_LIVE === "true",
 } as const;
 
 /** True only when a contract actually exists at the other end. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { guildColor, guildName } from "@/lib/guilds";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
 
 /*
  * The standings, as a band.
@@ -10,6 +10,7 @@ import { previewBoard } from "@/lib/preview-board";
  * over, which gives a seamless loop without measuring anything in JavaScript.
  */
 export function Ticker() {
+  const previewBoard = useBoardData();
   const standings = previewBoard.guilds.filter((g) => g.hexes > 0);
 
   const items = standings.map((g) => (

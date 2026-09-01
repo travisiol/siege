@@ -38,7 +38,7 @@ export const PHASES: { name: PhaseName; label: string; seconds: number; blurb: s
 
 /** Demonstration anchor. Fixed, so the cadence is reproducible. */
 const ANCHOR = Date.parse(
-  process.env.NEXT_PUBLIC_SIEGE_SEASON_START ?? "2026-08-24T00:00:00Z",
+  process.env.NEXT_PUBLIC_HEXWAR_SEASON_START ?? "2026-08-24T00:00:00Z",
 );
 
 export type TickState = {

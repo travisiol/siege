@@ -19,6 +19,11 @@
 
 import { TIER_YIELD } from "./hexmap";
 import { previewBoard } from "./preview-board";
+import type { Board } from "./board";
+
+/** Config-shaped values (pool size, yield rate, tier weights) do not change
+ *  between the simulated and the live board, so they stay bound to the export. */
+const DEFAULT = previewBoard as unknown as Board;
 
 /** Tier weight of the entire map — the denominator of every pool share. */
 export const TOTAL_TIER_WEIGHT = previewBoard.tiers.reduce(
@@ -53,30 +58,30 @@ export type HexEconomics = {
   ticksHeld: number;
 };
 
-export function hexEconomics(id: number): HexEconomics {
-  const tier = previewBoard.tiers[id] ?? 1;
+export function hexEconomics(id: number, board: Board = DEFAULT): HexEconomics {
+  const tier = board.tiers[id] ?? 1;
   const weight = TIER_YIELD[tier];
-  const treasury = previewBoard.treasury[id] ?? 0;
-  const heldSince = previewBoard.heldSince[id] ?? 0;
-  const owner = previewBoard.owners[id] ?? 0;
-  const holders = previewBoard.holders[id] ?? 0;
+  const treasury = board.treasury[id] ?? 0;
+  const heldSince = board.heldSince[id] ?? 0;
+  const owner = board.owners[id] ?? 0;
+  const holders = board.holders[id] ?? 0;
 
-  const yieldPerTick = weight * previewBoard.yieldUnit;
-  const ticksLeft = Math.max(0, previewBoard.ticksPerSeason - previewBoard.tick);
-  const poolShare = (previewBoard.seasonPool * weight) / TOTAL_TIER_WEIGHT;
-  const ticksHeld = owner === 0 ? 0 : Math.max(0, previewBoard.tick - heldSince);
+  const yieldPerTick = weight * board.yieldUnit;
+  const ticksLeft = Math.max(0, board.ticksPerSeason - board.tick);
+  const poolShare = (board.seasonPool * weight) / TOTAL_TIER_WEIGHT;
+  const ticksHeld = owner === 0 ? 0 : Math.max(0, board.tick - heldSince);
 
   return {
     tier,
     yieldPerTick,
-    yieldPerDay: yieldPerTick * previewBoard.ticksPerDay,
+    yieldPerDay: yieldPerTick * board.ticksPerDay,
     yieldRemaining: yieldPerTick * ticksLeft,
-    upkeepPerTick: (treasury * previewBoard.upkeepPct) / 100,
+    upkeepPerTick: (treasury * board.upkeepPct) / 100,
     treasury,
     poolShare,
     poolSharePct: (100 * weight) / TOTAL_TIER_WEIGHT,
     holders,
-    topHolderPct: previewBoard.topHolderPct[id] ?? 0,
+    topHolderPct: board.topHolderPct[id] ?? 0,
     poolSharePerHolder: holders > 0 ? poolShare / holders : poolShare,
     claimCost: tier * 100,
     fortification: 100 + 5 * Math.min(ticksHeld, 20),
@@ -94,25 +99,25 @@ export type GuildEconomics = {
   mapPct: number;
 };
 
-export function guildEconomics(guildId: number): GuildEconomics | null {
-  const g = previewBoard.guilds.find((x) => x.id === guildId);
+export function guildEconomics(guildId: number, board: Board = DEFAULT): GuildEconomics | null {
+  const g = board.guilds.find((x) => x.id === guildId);
   if (!g) return null;
 
   // Tier weight actually held, rebuilt from the board rather than stored twice.
   let weight = 0;
-  for (let id = 0; id < previewBoard.owners.length; id++) {
-    if (previewBoard.owners[id] === guildId) weight += TIER_YIELD[previewBoard.tiers[id]];
+  for (let id = 0; id < board.owners.length; id++) {
+    if (board.owners[id] === guildId) weight += TIER_YIELD[board.tiers[id]];
   }
-  const poolShare = (previewBoard.seasonPool * weight) / TOTAL_TIER_WEIGHT;
+  const poolShare = (board.seasonPool * weight) / TOTAL_TIER_WEIGHT;
 
   return {
     yieldPerTick: g.yieldPerTick,
-    yieldPerDay: g.yieldPerTick * previewBoard.ticksPerDay,
+    yieldPerDay: g.yieldPerTick * board.ticksPerDay,
     treasury: g.treasury,
     poolShare,
     poolSharePct: (100 * weight) / TOTAL_TIER_WEIGHT,
     perMember: g.members > 0 ? poolShare / g.members : poolShare,
-    mapPct: (100 * g.hexes) / previewBoard.totalHexes,
+    mapPct: (100 * g.hexes) / board.totalHexes,
   };
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { Label } from "@/components/ui/Label";
+import { useChainTick } from "@/lib/useChainTick";
 import {
   PHASES,
   TICKS_PER_SEASON,
@@ -27,6 +28,7 @@ export function TickClock({ className }: { className?: string }) {
   // Server render and first client render have to agree: start at null and let
   // the clock appear only once mounted.
   const [state, setState] = useState<TickState | null>(null);
+  const { data: chain } = useChainTick();
 
   useEffect(() => {
     const sync = () => setState(tickStateAt(Date.now()));
@@ -40,7 +42,9 @@ export function TickClock({ className }: { className?: string }) {
   return (
     <div className={clsx("panel px-4 py-3", className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <Label>Tick {state ? `${state.tick} / ${TICKS_PER_SEASON}` : `— / ${TICKS_PER_SEASON}`}</Label>
+        <Label>
+          Tick {chain ? chain.tick : state ? state.tick : "—"} / {TICKS_PER_SEASON}
+        </Label>
         <span
           className={clsx(
             "type-label",
@@ -49,7 +53,7 @@ export function TickClock({ className }: { className?: string }) {
               : "text-chalk-soft",
           )}
         >
-          {state ? state.phaseLabel : "Cadence"}
+          {chain ? PHASES[chain.phase]?.label ?? "—" : state ? state.phaseLabel : "Cadence"}
         </span>
       </div>
 
@@ -87,9 +91,13 @@ export function TickClock({ className }: { className?: string }) {
       </div>
 
       <p className="type-data mt-2 text-chalk-muted">
-        {state
-          ? PHASES.find((p) => p.name === state.phase)?.blurb
-          : "One tick is 8h: commit, reveal, resolution."}
+        {chain?.resolutionPending
+          ? "Waiting on the keeper to resolve this tick."
+          : chain
+            ? PHASES[chain.phase]?.blurb
+            : state
+              ? PHASES.find((p) => p.name === state.phase)?.blurb
+              : "One tick is 8h: commit, reveal, resolution."}
       </p>
     </div>
   );

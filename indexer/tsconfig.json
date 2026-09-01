@@ -1,0 +1,13 @@
+{
+  "//": "The indexer runs under Node directly, which needs the .ts extension in imports and ships node:sqlite. Next rejects both, hence a separate scope.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": []
+}

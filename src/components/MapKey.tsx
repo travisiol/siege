@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { TIER_YIELD } from "@/lib/hexmap";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
 import { money } from "@/lib/economics";
 import type { MapMode } from "@/components/HexMap";
 
@@ -19,9 +19,6 @@ const MODES: { key: MapMode; label: string; hint: string }[] = [
   { key: "owners", label: "Who owns it", hint: "One colour per guild" },
 ];
 
-const day = (tier: number) =>
-  TIER_YIELD[tier] * previewBoard.yieldUnit * previewBoard.ticksPerDay;
-
 export function MapKey({
   mode,
   onMode,
@@ -31,6 +28,9 @@ export function MapKey({
   onMode: (m: MapMode) => void;
   className?: string;
 }) {
+  const board = useBoardData();
+  const day = (tier: number) => TIER_YIELD[tier] * board.yieldUnit * board.ticksPerDay;
+
   return (
     <div className={clsx("border border-rule bg-void/85 backdrop-blur-sm", className)}>
       <div className="flex" role="group" aria-label="Map colouring">
@@ -73,7 +73,7 @@ export function MapKey({
               <span className="h-3 w-3 shrink-0 border border-dashed border-chalk" />
               <span className="type-label text-chalk-soft">Free</span>
               <span className="type-data ml-auto text-chalk">
-                {previewBoard.neutralHexes} left
+                {board.neutralHexes} left
               </span>
             </li>
           </ul>
@@ -83,28 +83,28 @@ export function MapKey({
               <span className="h-3 w-3 shrink-0 bg-[#4c8df6]/40 ring-1 ring-[#4c8df6]" />
               <span className="type-label text-chalk-soft">Guild territory</span>
               <span className="type-data ml-auto text-chalk">
-                {previewBoard.guilds.filter((g) => g.hexes > 0).length} guilds
+                {board.guilds.filter((g) => g.hexes > 0).length} guilds
               </span>
             </li>
             <li className="flex items-center gap-2">
               <span className="h-3 w-3 shrink-0 bg-[#39404a]" />
               <span className="type-label text-chalk-soft">Unclaimed</span>
               <span className="type-data ml-auto text-chalk">
-                {previewBoard.neutralHexes}
+                {board.neutralHexes}
               </span>
             </li>
             <li className="flex items-center gap-2">
               <span className="h-3 w-3 shrink-0 rounded-full border-2 border-ember" />
               <span className="type-label text-chalk-soft">Tier 3 · pays 8x</span>
               <span className="type-data ml-auto text-chalk">
-                {previewBoard.tiers.filter((t) => t === 3).length}
+                {board.tiers.filter((t) => t === 3).length}
               </span>
             </li>
             <li className="flex items-center gap-2">
               <span className="h-3 w-3 shrink-0 border-2 border-chalk" />
               <span className="type-label text-chalk-soft">Refuge · safe</span>
               <span className="type-data ml-auto text-chalk">
-                {previewBoard.refuges.length}
+                {board.refuges.length}
               </span>
             </li>
           </ul>

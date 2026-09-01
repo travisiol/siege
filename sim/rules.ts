@@ -75,7 +75,7 @@ export const TICKS_PER_SEASON = 126;
 export const REBELLION_TICK = 32;
 
 /**
- * Cout de claim d'un hex neutre adjacent: tier * 100 $SIEGE.
+ * Cout de claim d'un hex neutre adjacent: tier * 100 $HEXWAR.
  *
  * Avec `taxed`, le meme multiplicateur d'empire que l'attaque s'y applique. Sans
  * lui, l'expansion sur le neutre est gratuite a toute taille et la taxe d'empire

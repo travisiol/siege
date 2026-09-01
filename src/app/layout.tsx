@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { Providers } from "@/components/providers";
+import { BoardProvider } from "@/lib/board-context";
 import { siteConfig } from "@/lib/site-config";
 
 /*
@@ -60,8 +62,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="flex min-h-full flex-col bg-void text-chalk">
-        <Navbar />
-        <main className="relative flex-1 overflow-hidden">{children}</main>
+        <Providers>
+          <BoardProvider>
+            <Navbar />
+            <main className="relative flex-1 overflow-hidden">{children}</main>
+          </BoardProvider>
+        </Providers>
       </body>
     </html>
   );

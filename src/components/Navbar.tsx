@@ -2,7 +2,8 @@
 
 import { Drawer } from "@/components/Drawer";
 import { Label } from "@/components/ui/Label";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
+import { WalletConnect } from "@/components/WalletConnect";
 import { money } from "@/lib/economics";
 import { siteConfig, isLive, chainConfig } from "@/lib/site-config";
 
@@ -30,6 +31,7 @@ function Mark() {
 }
 
 export function Navbar() {
+  const previewBoard = useBoardData();
   const held = previewBoard.totalHexes - previewBoard.neutralHexes;
 
   const chips = [
@@ -68,6 +70,8 @@ export function Navbar() {
             </div>
           ))}
         </dl>
+
+        <WalletConnect className="shrink-0 border border-rule-strong text-chalk hover:border-ember hover:text-ember" />
 
         <span
           className="type-label ml-auto shrink-0 border border-rule-strong px-2.5 py-1.5 text-chalk-muted md:ml-0"

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildMap, hexCenter, pixelToAxial, DIRECTIONS, TIER_YIELD } from "@/lib/hexmap";
 import { guildColor, guildName, NEUTRAL_COLOR } from "@/lib/guilds";
+import { siteConfig } from "@/lib/site-config";
 
 /*
  * The map. Canvas 2D, no 3D library — the brief requires it and it is right:
@@ -364,7 +365,7 @@ export function HexMap({
         ref={canvasRef}
         tabIndex={0}
         role="application"
-        aria-label="SIEGE map, 547 hexes. Arrow keys move between hexes, Enter opens the hex sheet."
+        aria-label={`${siteConfig.name} map, 547 hexes. Arrow keys move between hexes, Enter opens the hex sheet.`}
         className="outline-none focus-visible:ring-2 focus-visible:ring-ember"
         style={{ cursor: hovered !== null ? "pointer" : "grab", touchAction: "none" }}
         onPointerDown={(e) => {
@@ -456,7 +457,9 @@ export function HexMap({
             <span className="type-figure-sm text-ember">
               {TIER_YIELD[tipTier] * yieldUnit * ticksPerDay}
             </span>
-            <span className="type-label ml-1.5 text-chalk-muted">$SIEGE / day</span>
+            <span className="type-label ml-1.5 text-chalk-muted">
+              {siteConfig.ticker} / day
+            </span>
           </div>
           <div className="type-label mt-1 whitespace-nowrap text-chalk-muted">
             {tipOwner === 0

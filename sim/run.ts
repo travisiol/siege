@@ -107,7 +107,7 @@ function summarize(name: string, note: string, reps: SeasonReport[]): void {
 
 const map = buildMap(BASE.radius);
 const tc = tierCounts(map);
-console.log("SIEGE -- M0 balance simulation");
+console.log("HEXWAR -- M0 balance simulation");
 console.log("=".repeat(80));
 console.log(
   `Map: radius ${BASE.radius} -> ${map.cells.length} hexes ` +

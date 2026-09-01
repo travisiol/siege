@@ -78,6 +78,8 @@ export type World = {
     battles: number; conquests: number; claims: number;
     orderIndependenceChecks: number; orderIndependenceFailures: number;
   };
+  /** Populated only when `runSeason` was asked to trace a tick. */
+  trace?: BattleTrace[];
 };
 
 export type OrderKind = "attack" | "defend" | "claim";
@@ -224,6 +226,26 @@ export type Effects = {
   claims: { hex: number; guild: number; contributors: [number, bigint][]; toTreasury: bigint }[];
   defended: number[];
   battles: number;
+  /**
+   * Optional blow-by-blow of the tick, for the resolution screen.
+   * Off by default: the numbers are only needed when something is going to
+   * replay them, and building the array on every tick of every season would
+   * make the ten-season sweep noticeably slower for nothing.
+   */
+  trace?: BattleTrace[];
+};
+
+export type BattleTrace = {
+  hex: number;
+  tier: number;
+  kind: "battle" | "claim";
+  defender: number;
+  defPower: bigint;
+  defStake: bigint;
+  fort: number;
+  attackers: { guild: number; power: bigint; stake: bigint }[];
+  winner: number;
+  treasury: bigint;
 };
 
 function credit(m: Map<number, bigint>, id: number, v: bigint) {
@@ -251,11 +273,13 @@ function proRata(pot: bigint, parts: [number, bigint][], out: Map<number, bigint
  */
 export function resolveTick(
   w: World, snap: Snapshot, orders: Order[], activeByGuild: number[], t: number,
+  trace = false,
 ): Effects {
   const eff: Effects = {
     balance: new Map<number, bigint>(), burn: 0n,
     conquests: [], claims: [], defended: [], battles: 0,
   };
+  if (trace) eff.trace = [];
 
   const byHex = new Map<number, Order[]>();
   for (const o of orders) {
@@ -318,6 +342,16 @@ export function resolveTick(
       eff.burn += consumed - toTreasury;
       for (const o of claims) if (o.guild !== winner) credit(eff.balance, o.agent, o.amount);
       eff.claims.push({ hex: hexId, guild: winner, contributors, toTreasury });
+      eff.trace?.push({
+        hex: hexId, tier: snap.tier[hexId], kind: "claim", defender: 0,
+        defPower: 0n, defStake: 0n, fort: 100,
+        attackers: [...byGuild.keys()].sort((a, b) => a - b).map((g) => ({
+          guild: g,
+          power: rawPower(byGuild.get(g)!.map((o) => o.amount)),
+          stake: byGuild.get(g)!.reduce((acc, o) => acc + o.amount, 0n),
+        })),
+        winner, treasury: toTreasury,
+      });
       continue;
     }
 
@@ -360,6 +394,25 @@ export function resolveTick(
     }
     // A > D strictement. Egalite parfaite entre attaquants -> le defenseur tient.
     const taken = bestA > D && !tie;
+
+    eff.trace?.push({
+      hex: hexId, tier: snap.tier[hexId], kind: "battle", defender: owner,
+      defPower: D,
+      defStake: defenders.reduce((acc, o) => acc + o.amount, 0n),
+      fort: Number(lapsed ? 100n : 100n + 5n * BigInt(Math.min(t - snap.heldSinceTick[hexId], 20))),
+      attackers: [...attacksByGuild.keys()].sort((a, b) => a - b).map((g) => ({
+        guild: g,
+        power: attackPower({
+          stakes: attacksByGuild.get(g)!.map((o) => o.amount),
+          activeMembers: activeByGuild[g - 1] ?? 0,
+          guildHexCount: snap.hexCount[g - 1],
+          tick: t,
+        }),
+        stake: attacksByGuild.get(g)!.reduce((acc, o) => acc + o.amount, 0n),
+      })),
+      winner: taken ? winner : 0,
+      treasury: snap.treasury[hexId],
+    });
 
     const defParts: [number, bigint][] = defenders.map((o) => [o.agent, o.amount]);
     const losers = [...attacksByGuild.keys()].filter((g) => !(taken && g === winner)).sort((a, b) => a - b);

@@ -9,7 +9,7 @@ R.c("server/chunks/ssr/[externals]_next_dist_compiled_@vercel_og_index_node_1xe0
 R.c("server/chunks/ssr/node_modules_1-ddpwn._.js")
 R.c("server/chunks/ssr/src_app_1xlyak1._.js")
 R.c("server/chunks/ssr/src_1e2fal_._.js")
-R.c("server/chunks/ssr/src_20wfj1e._.js")
+R.c("server/chunks/ssr/src_0xuj98u._.js")
 R.c("server/chunks/ssr/src_app_error_tsx_15dgtgq._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_client_components_0wpq8j3._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_forbidden_0symwr9.js")

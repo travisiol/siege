@@ -6,12 +6,13 @@ import { HexPanel } from "@/components/HexPanel";
 import { MapKey } from "@/components/MapKey";
 import { Steps } from "@/components/Steps";
 import { Docs } from "@/components/Docs";
+import { Resolution } from "@/components/Resolution";
 import { TickClock } from "@/components/TickClock";
 import { Ticker } from "@/components/Ticker";
 import { Button } from "@/components/ui/Button";
 import { Label, PreviewTag } from "@/components/ui/Label";
 import { buildMap } from "@/lib/hexmap";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
 import { siteConfig } from "@/lib/site-config";
 
 /*
@@ -34,8 +35,10 @@ import { siteConfig } from "@/lib/site-config";
 export function World() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [docsOpen, setDocsOpen] = useState(false);
+  const [replayOpen, setReplayOpen] = useState(false);
   const [mode, setMode] = useState<MapMode>("pays");
   const [wide, setWide] = useState(true);
+  const previewBoard = useBoardData();
 
   const cells = useMemo(() => buildMap(previewBoard.radius), []);
   const selected = selectedId === null ? null : cells[selectedId];
@@ -123,6 +126,9 @@ export function World() {
               <Button variant="outline" onClick={() => setDocsOpen(true)}>
                 How it works
               </Button>
+              <Button variant="outline" onClick={() => setReplayOpen(true)}>
+                Watch a tick resolve
+              </Button>
             </div>
 
             <div className="mt-5 max-w-[320px]">
@@ -156,6 +162,7 @@ export function World() {
       </div>
 
       {docsOpen && <Docs onClose={() => setDocsOpen(false)} />}
+      {replayOpen && <Resolution onClose={() => setReplayOpen(false)} />}
     </div>
   );
 }

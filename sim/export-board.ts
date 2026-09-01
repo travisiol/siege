@@ -1,6 +1,6 @@
 // Exports a real season state to the site.
 //
-// The board on siege is not invented data: it is the output of the M0 balance
+// The board on hexwar is not invented data: it is the output of the M0 balance
 // simulation, stopped mid-season. Hex ids in `sim/hex.ts` and
 // `src/lib/hexmap.ts` line up, so these arrays apply directly to the map the
 // browser draws.
@@ -137,5 +137,5 @@ console.log(`  neutral          ${neutral} (${((100 * neutral) / owners.length).
 console.log(`  guilds in play   ${active.length}`);
 console.log(`  largest          ${guilds[0].hexes} hexes, ${guilds[0].members} members`);
 console.log(`  holders / hex    ${(holders.reduce((s, h) => s + h, 0) / (owners.length - neutral)).toFixed(1)} avg`);
-console.log(`  map yield        ${mapYieldPerTick} $SIEGE per tick`);
+console.log(`  map yield        ${mapYieldPerTick} $HEXWAR per tick`);
 console.log(`  battles          ${w.stats.battles}`);

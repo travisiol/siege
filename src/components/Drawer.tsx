@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { guildColor, guildName } from "@/lib/guilds";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
 import { guildEconomics, money } from "@/lib/economics";
 import { siteConfig, chainConfig } from "@/lib/site-config";
 
@@ -17,6 +17,7 @@ import { siteConfig, chainConfig } from "@/lib/site-config";
  * on twenty that tore fifteen out of someone else.
  */
 export function Drawer() {
+  const previewBoard = useBoardData();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export function Drawer() {
 
               <ul className="mt-3">
                 {standings.map((g) => {
-                  const e = guildEconomics(g.id);
+                  const e = guildEconomics(g.id, previewBoard);
                   return (
                     <li key={g.id} className="border-b border-rule/40 py-3 last:border-0">
                       <div className="flex items-baseline gap-2">

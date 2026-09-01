@@ -7,7 +7,7 @@ import { guildColor, guildName } from "@/lib/guilds";
 import { TIER_YIELD, type HexCell } from "@/lib/hexmap";
 import { hexEconomics, guildEconomics, money } from "@/lib/economics";
 import { isLive, chainConfig, siteConfig } from "@/lib/site-config";
-import { previewBoard } from "@/lib/preview-board";
+import { useBoardData } from "@/lib/board-context";
 
 /*
  * One hex, and what it is worth.
@@ -60,10 +60,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function HexPanel({ cell, onClose }: { cell: HexCell; onClose: () => void }) {
+  const previewBoard = useBoardData();
   const owner = previewBoard.owners[cell.id] ?? 0;
   const isRefuge = previewBoard.refuges.includes(cell.id);
-  const e = hexEconomics(cell.id);
-  const g = owner === 0 ? null : guildEconomics(owner);
+  const e = hexEconomics(cell.id, previewBoard);
+  const g = owner === 0 ? null : guildEconomics(owner, previewBoard);
   const ticksLeft = previewBoard.ticksPerSeason - previewBoard.tick;
 
   return (

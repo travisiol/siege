@@ -41,11 +41,11 @@ for (const id of guild.hexes) tierMix[w.hexes[id].tier]++;
 for (const t of [1, 2, 3]) claimSpend += BigInt(tierMix[t]) * claimCost(t, WAD);
 
 console.log(`\nTier mix held         t1=${tierMix[1]}  t2=${tierMix[2]}  t3=${tierMix[3]}`);
-console.log(`Starting capital      ${fmt(top.initial)} SIEGE`);
+console.log(`Starting capital      ${fmt(top.initial)} HEXWAR`);
 console.log(`Cost of those ${guild.hexes.size} hexes at the claim price (tier x100)`);
-console.log(`                      ${fmt(claimSpend)} SIEGE` +
+console.log(`                      ${fmt(claimSpend)} HEXWAR` +
   `  = ${((100 * Number(claimSpend / WAD)) / Number(top.initial / WAD)).toFixed(1)}% of its capital`);
-console.log(`Final balance         ${fmt(top.balance)} SIEGE` +
+console.log(`Final balance         ${fmt(top.balance)} HEXWAR` +
   `  (x${(Number(top.balance / (WAD / 100n)) / Number(top.initial / (WAD / 100n))).toFixed(2)})`);
 
 const totalYield = [...guild.hexes].reduce((s, id) => s + TIER_YIELD[w.hexes[id].tier], 0n);
