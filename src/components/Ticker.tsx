@@ -4,11 +4,10 @@ import { guildColor, guildName } from "@/lib/guilds";
 import { previewBoard } from "@/lib/preview-board";
 
 /*
- * Le classement, en bandeau.
+ * The standings, as a band.
  *
- * Contenu dupliqué une fois: l'animation défile exactement une copie puis
- * repart de zéro, ce qui donne une boucle sans couture sans avoir à mesurer
- * quoi que ce soit en JavaScript.
+ * Content duplicated once: the animation scrolls exactly one copy then starts
+ * over, which gives a seamless loop without measuring anything in JavaScript.
  */
 export function Ticker() {
   const standings = previewBoard.guilds.filter((g) => g.hexes > 0);
@@ -19,7 +18,7 @@ export function Ticker() {
       <span className="type-label text-chalk-soft">{guildName(g.id)}</span>
       <span className="type-data text-chalk">{g.hexes}</span>
       <span className="type-label text-chalk-muted">
-        {g.conquests} prises · {g.losses} perdus
+        {g.conquests} taken · {g.losses} lost
       </span>
     </span>
   ));
@@ -27,12 +26,12 @@ export function Ticker() {
   return (
     <div className="flex items-center border-t border-rule bg-void/92 backdrop-blur-sm">
       <span className="type-label shrink-0 border-r border-rule px-4 py-2.5 text-chalk-muted">
-        Saison simulée
+        Simulated season
       </span>
       <div className="flex-1 overflow-hidden py-2.5">
         <div className="animate-ticker flex w-max items-center">
           {items}
-          {/* La copie qui rend la boucle continue. */}
+          {/* The copy that makes the loop continuous. */}
           <span aria-hidden className="flex">
             {items}
           </span>

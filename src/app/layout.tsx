@@ -4,9 +4,9 @@ import { Navbar } from "@/components/Navbar";
 import { siteConfig } from "@/lib/site-config";
 
 /*
- * Les polices arrivent par <link> à l'exécution plutôt que par
- * next/font/google, qui les télécharge et les auto-héberge au moment du BUILD
- * et exige donc un accès sortant depuis la machine qui construit.
+ * Fonts load from a runtime <link> rather than next/font/google, which
+ * downloads and self-hosts them at BUILD time and so needs outbound access from
+ * wherever `next build` runs.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   },
   description: siteConfig.seoDescription,
   keywords: [
-    "conquête",
-    "hexagones",
-    "guildes",
-    "onchain",
+    "onchain game",
+    "territory",
+    "hex map",
+    "guilds",
     "commit reveal",
-    "déterministe",
+    "deterministic",
     "Base",
   ],
   openGraph: {
@@ -45,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className="h-full">
+    <html lang="en" className="h-full">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

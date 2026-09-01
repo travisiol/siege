@@ -9,11 +9,10 @@ export const contentType = "image/png";
 export const alt = `${siteConfig.name} — ${siteConfig.tagline}`;
 
 /*
- * La carte réelle en aperçu social, pas une illustration.
+ * The real map as the social preview, not an illustration.
  *
- * ImageResponse ne fait pas de canvas: on projette donc les 547 centres en SVG
- * et on laisse la couleur des guildes porter l'image. C'est la même donnée que
- * celle affichée sur la page.
+ * ImageResponse has no canvas, so the 547 centres are projected as SVG and the
+ * guild colours carry the image. Same data the page itself draws.
  */
 export default function OpengraphImage() {
   const cells = buildMap(previewBoard.radius);
@@ -83,7 +82,7 @@ export default function OpengraphImage() {
               color: "#ff5a1f",
             }}
           >
-            {previewBoard.totalHexes} hexagones · 12 guildes
+            {previewBoard.totalHexes} hexes · 12 guilds
           </div>
           <div
             style={{
@@ -118,7 +117,7 @@ export default function OpengraphImage() {
               lineHeight: 1.4,
             }}
           >
-            Un tour toutes les 8 h. Aucun aléatoire.
+            One turn every 8 hours. No randomness.
           </div>
         </div>
       </div>

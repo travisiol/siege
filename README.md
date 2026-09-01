@@ -1,19 +1,18 @@
 # SIEGE
 
-Jeu de conquête territoriale onchain : 547 hexagones, douze guildes, un tick
-toutes les huit heures, résolution 100 % déterministe.
+An onchain territory game: 547 hexes, twelve guilds, one turn every eight hours,
+fully deterministic resolution.
 
-Le dépôt contient deux moitiés qui se parlent :
+The repo holds two halves that talk to each other:
 
 | | |
 |---|---|
-| `src/` | **Le site.** Next.js 16, une seule page, la carte est le produit. |
-| `sim/` | **M0, la simulation d'équilibrage.** Aucune dépendance, Node exécute le TS nativement. |
+| `src/` | **The site.** Next.js 16, one page, the map is the product. |
+| `sim/` | **M0, the balance simulation.** No dependencies — Node runs the TS natively. |
 
-Le plateau affiché sur le site n'est pas une donnée inventée : c'est un état
-réel produit par `sim/`, exporté au tick 18 d'une saison de 126. Les
-identifiants d'hexagones se correspondent d'un côté à l'autre, donc les
-tableaux exportés s'appliquent tels quels sur la carte du navigateur.
+The board on the site is not invented data: it is a real state produced by
+`sim/`, exported at tick 18 of a 126-tick season. Hex ids line up on both sides,
+so the exported arrays apply directly to the map the browser draws.
 
 ```bash
 npm run dev
@@ -23,205 +22,208 @@ npm run dev
 npm run sim
 ```
 
-`npm run sim:test` vérifie les formules contre les exemples du brief,
-`npm run sim:diag` dissèque le scénario qui casse le gate, et
-`npm run sim:board` régénère `src/lib/preview-board.ts`.
+`npm run sim:test` checks the formulas against the brief's own examples,
+`npm run sim:diag` dissects the scenario that breaks the gate, and
+`npm run sim:board` regenerates `src/lib/preview-board.ts`.
 
 ---
 
-## Le site
+## The site
 
-Une page, sans défilement. La carte occupe l'écran, le pitch se pose dessus,
-et tout le reste — fiche d'hexagone, règles — s'ouvre par-dessus puis se
-referme sur la carte.
+One page, no scrolling. The map fills the screen, the pitch sits over it, and
+everything else — hex sheet, manual — opens on top and closes back to the map.
+Once the layout stacks the two are split outright: map in the top band, copy in
+the bottom one, because overlaying them makes both unreadable.
 
-**Ce qui porte la lecture :** l'intérieur d'un territoire est faible, ses
-frontières sont fortes. Un remplissage uniforme par guilde donne un vitrail
-illisible ; ce qu'on regarde sur une carte de conquête, c'est où sa couleur
-touche celle d'un autre. Seules les arêtes séparant deux propriétaires
-différents sont tracées.
+**What carries the reading:** the inside of a territory is faint, its borders are
+strong. Filling each guild solid gives an unreadable stained-glass window; what
+you look at on a conquest map is where your colour meets someone else's. Only
+edges separating two different owners are drawn.
 
-**La couleur est rationnée.** Les douze guildes se partagent le cercle
-chromatique en évitant la bande orange, réservée à la braise : les 27 hexagones
-de tier 3 (5 % de la carte, 8x de rendement) et le geste d'engager un ordre.
-Le reste du jeu est froid ; ce qui brûle se paie.
+**Colour is rationed.** The twelve guilds split the wheel avoiding the orange
+band, which belongs to the ember: the 27 tier 3 hexes (5% of the map, 8x yield)
+and the act of committing an order. The rest of the game is cold.
 
-**L'horloge est à l'échelle.** Les trois segments du tick sont proportionnels
-aux vraies durées — 7 h de commit, 45 min de reveal, 15 min de résolution — donc
-les deux dernières phases sont deux fines lamelles au bout d'un long segment.
-Une barre en tiers égaux mentirait sur le rythme du jeu.
+**The clock is to scale.** The three tick segments are proportional to the real
+durations — 7h commit, 45min reveal, 15min resolution — so the last two are thin
+slivers at the end of a long segment. A bar in equal thirds would lie about the
+rhythm of the game.
 
-**Rien n'est déployé, et le site le dit.** Aucun contrat n'existe : le panneau
-d'ordre est désactivé, la carte est étiquetée comme simulation partout où elle
-apparaît, et `isLive` reste faux tant que `NEXT_PUBLIC_SIEGE_BATTLE_ADDRESS`
-est absent. Aucune adresse ni aucun prix inventé ne peut partir en production.
+**Every hex sheet answers "what does this pay".** Yield per tick and per day,
+treasury sitting on the hex, upkeep, the projected cut of the fixed season pool,
+how many wallets hold it and how concentrated that holding is, the guild's
+membership and daily take, fortification, and what a capture wins or costs.
 
-Le nom vit dans `src/lib/site-config.ts` et nulle part ailleurs — `name`,
-`wordmark`, `ticker`. Le renommer, c'est éditer ces trois chaînes ; pas un
-grep-and-replace à travers les composants.
+**Nothing is deployed, and the site says so.** The order panel is disabled, the
+board is labelled as a simulation everywhere it appears, and `isLive` stays false
+while `NEXT_PUBLIC_SIEGE_BATTLE_ADDRESS` is unset. No invented address or price
+can ship.
+
+The name lives in `src/lib/site-config.ts` and nowhere else — `name`, `wordmark`,
+`ticker`. Renaming means editing those three strings, not a grep-and-replace
+through the components.
 
 ---
 
-## M0 — verdict : le gate ne passe pas
+## M0 — verdict: the gate does not clear
 
-Le brief est explicite : *on ne passe pas à M1 si un seul wallet dépasse 15 %
-de la carte.* Sur 10 saisons de 126 ticks, 500 agents, 8 scénarios :
+The brief is explicit: *no move to M1 if a single wallet ends a season holding
+more than 15% of the map.* Across 10 seasons of 126 ticks, 500 agents, 8
+scenarios:
 
-| Scénario | Top wallet (pire saison) | Gate |
+| Scenario | Top wallet (worst season) | Gate |
 |---|---|---|
-| `base` — 1 wallet par acteur, 12 guildes | 2,4 % | PASS |
-| `conquest-only` — position mintée à la prise seulement | 2,7 % | PASS |
-| `sybil-10` — chaque whale en 10 wallets | 0,9 % (acteur agrégé : 3,5 %) | PASS |
-| `sybil-100+conquest-only` | 1,1 % (acteur agrégé : 4,1 %) | PASS |
-| `guildes-3` | 1,2 % | PASS |
-| `whale-solo` — 4 whales en guilde solo, 12 guildes | 7,3 % | PASS |
-| **`whale-solo-5g`** — guildes solo, 5 guildes | **45,9 %** | **ÉCHEC** |
-| **`whale-solo-5g-plancher`** — idem, 1 seul claim/tick | **18,5 %** | **ÉCHEC** |
+| `base` — 1 wallet per actor, 12 guilds | 2.4% | PASS |
+| `conquest-only` — position minted on capture only | 2.7% | PASS |
+| `sybil-10` — each whale split into 10 wallets | 0.9% (actor aggregate: 3.5%) | PASS |
+| `sybil-100+conquest-only` | 1.1% (actor aggregate: 4.1%) | PASS |
+| `guilds-3` | 1.2% | PASS |
+| `whale-solo` — 4 whales in solo guilds, 12 guilds | 7.3% | PASS |
+| **`whale-solo-5g`** — solo guilds, 5 guilds | **45.9%** | **FAIL** |
+| **`whale-solo-5g-floor`** — same, 1 claim per tick | **18.5%** | **FAIL** |
 
-### Comment un wallet prend 40 % de la carte (`npm run sim:diag`)
+### How one wallet takes 40% of the map (`npm run sim:diag`)
 
 ```
-Wallet dominant     #0  (whale, guilde 1)
-Membres de sa guilde 1
-Part de carte       39.5%
-Hexes de la guilde  216 / 547
-  acquis par claim      216
-  acquis par conquete     0
-  perdus au combat        0
-Cout des 216 hexes    29 500 SIEGE = 29.5% de son capital
-Solde final           831 564 SIEGE  (x8.32)
+Dominant wallet     #0  (whale, guild 1)
+Members in guild     1
+Share of map        39.5%
+Guild hexes         216 / 547
+  acquired by claim     216
+  acquired by conquest    0
+  lost in battle          0
+Cost of 216 hexes     29,500 SIEGE = 29.5% of its capital
+Final balance        831,564 SIEGE  (x8.32)
 ```
 
-Il n'a **livré aucune bataille** et **perdu aucun hex**. Il a acheté 40 % de la
-carte au tarif affiché, pour un tiers de son capital.
+It fought **no battles** and lost **no hexes**. It bought 40% of the map at the
+listed price, for a third of its capital.
 
-Trois règles se combinent mal :
+Three rules combine badly:
 
-1. **Le claim d'un hex neutre n'est pas taxé.** La taxe d'empire
-   (`mise * (100 + hexCount²) / 100`) ne s'applique qu'à l'attaque. Un claim
-   coûte `tier * 100` à plat, que la guilde ait 1 hex ou 300. Toute la carte
-   coûte moins cher qu'un seul capital de whale.
-2. **La taxe d'empire gèle la carte.** À 30 hexes une attaque coûte x10, à 216
-   x467. Passé une certaine taille plus personne ne peut attaquer personne : la
-   course aux neutres du début de saison devient **irréversible**.
-3. **Rien n'impose une taille minimale de guilde.** En solo on perd la cohésion
-   (102 au lieu de 150), mais la cohésion ne sert qu'au combat — et cette
-   stratégie ne combat jamais.
+1. **Claiming a neutral hex is untaxed.** The empire tax
+   (`stake * (100 + hexCount²) / 100`) applies only to attacks. A claim costs
+   `tier * 100` flat whether the guild holds 1 hex or 300. The whole map costs
+   less than a single whale's capital.
+2. **The empire tax freezes the map.** At 30 hexes an attack costs x10, at 216
+   it costs x467. Past a certain size nobody can attack anybody, so the early
+   land grab becomes **irreversible**.
+3. **Nothing requires a minimum guild size.** Playing solo loses cohesion (102
+   instead of 150), but cohesion only matters in combat — and this strategy
+   never fights.
 
-Le `base` passe le gate non pas parce que le design tient, mais parce que 500
-joueurs répartis sur 12 guildes se diluent mutuellement. Le gate mesure le
-**wallet** ; aucune règle n'oblige un acteur à jouer avec un seul wallet, ni à
-rejoindre une guilde peuplée.
+`base` clears the gate not because the design holds, but because 500 players
+spread across 12 guilds dilute each other. The gate measures the **wallet**;
+no rule forces an actor to play with one wallet, or to join a populated guild.
 
-Le résultat est robuste : même à un claim par tick — soit une transaction — le
-gate tombe sur 10 saisons sur 10.
-
----
-
-## Trous et contradictions dans la spec
-
-Trouvés en implémentant. Les six premiers bloquent M1.
-
-**1. Le reveal manquant est insanctionnable tel qu'écrit.** *« Reveal manquant =
-mise engagée perdue (10 % brûlés, 90 % rendus) »*. Le contrat ne détient que
-`keccak256(hexId, amount, isAttack, salt, sender)`. Si le joueur ne révèle
-jamais, le montant n'est **jamais connu onchain** : impossible d'en brûler 10 %.
-Il faut un bond fixe posé au commit, ou slasher un pourcentage du solde interne.
-
-**2. Rien n'alimente `treasury`.** Le champ est « accumulé », l'upkeep en
-prélève 2 %, la conquête le transfère — mais aucune règle ne dit ce qui le
-**remplit**. *Hypothèse prise : coût de claim + rendement du tier tiré de la
-cagnotte pré-financée.*
-
-**3. 512 hexes ≠ disque de rayon 13.** Un disque hexagonal contient
-`3R² + 3R + 1` : R=12 donne 469, R=13 donne 547. **Aucun rayon ne donne 512.**
-Découper 512 dans le disque casse la connexité du bord. *Hypothèse prise : 547.*
-
-**4. L'invariant « même ordre de tx → même état » est faux si on peut commit
-plus que son solde.** Les reveals sont des transactions séquentielles. Un joueur
-qui commit trois ordres totalisant plus que son solde fait dépendre du
-**mempool** lesquels passent. Même correctif que le trou #1.
-
-**5. Résolution multi-attaquants non spécifiée.** Deux guildes attaquent le même
-hex au même tick : qui l'emporte ? *Hypothèse prise : A maximal ; égalité →
-le défenseur tient ; tous les attaquants perdants paient les 20 %.*
-
-**6. Aucune taille minimale de guilde.** Voir le verdict ci-dessus.
-
-**7. « Un hex non défendu depuis 30 ticks perd sa fortification » est ambigu** —
-pas attaqué, ou pas de mise défensive ? *Hypothèse prise : aucune mise défensive
-révélée depuis 30 ticks.*
-
-**8. Défendre est un travail de bot.** Un ordre par hex et par tick : tenir 40
-hexes demande 40 ordres, 3 fois par jour, 42 jours. Cela contredit *« les ticks
-existent pour que les bots ne gagnent pas »*. Les ticks empêchent le combat
-réflexe, pas l'automatisation — ils la **rendent obligatoire**.
-
-**9. La cagnotte de fin de saison invite au snipe.** 90 % de la cagnotte n'est
-pas consommée pendant la saison et se distribue sur l'état **final**. Seule la
-carte du dernier tick compte.
-
-**10. `Σ √mise` récompense le découpage.** Choix assumé du brief, mais il faut
-en connaître le prix : découper une mise sur N wallets multiplie la puissance
-par `√N` — vérifié dans `sim/selftest.ts`, 100 wallets = **x10 à capital égal**.
+The result is robust: even at one claim per tick — a single transaction — the
+gate fails in 10 seasons out of 10.
 
 ---
 
-## Deux chiffres à regarder en plus du gate
+## Spec holes and contradictions
 
-**La taxe d'empire détruit la moitié de l'économie.** 51 % du capital initial
-est brûlé par saison, dont **99 % par le seul surcoût d'attaque**. Supply fixe,
-aucun mint : à ce rythme la partie s'éteint en quelques saisons.
+Found while implementing. The first six block M1.
 
-**Les petits joueurs partent avant la mi-saison.** 61 % des passifs et moyens
-abandonnent, tick médian **43 sur 126**, surtout par ruine.
+**1. A missed reveal cannot be penalised as written.** *"Missed reveal = stake
+forfeit (10% burned, 90% returned)"*. The contract holds only
+`keccak256(hexId, amount, isAttack, salt, sender)`. If the player never reveals,
+the amount is **never known onchain**, so 10% of it cannot be burned. This needs
+a fixed bond posted at commit, or slashing a percentage of the internal balance.
 
-Autres mesures (`base`) : Gini territoire 0,605 ; Gini soldes 0,707 ; plus
-grosse guilde 16,4 % ; carte 100 % partagée en fin de saison ; ~750 batailles
-et ~582 conquêtes par saison.
+**2. Nothing funds `treasury`.** The field is "accumulated", upkeep skims 2%,
+capture transfers it — but no rule says what **fills** it. *Assumed: claim cost
+plus tier yield drawn from the pre-funded pool.*
+
+**3. 512 hexes ≠ a radius-13 disc.** A hex disc holds `3R² + 3R + 1`: R=12 gives
+469, R=13 gives 547. **No radius gives 512.** Carving 512 out of the disc breaks
+border connectivity. *Assumed: 547.*
+
+**4. The "same state regardless of tx order" invariant is false if a player can
+commit more than their balance.** Reveals are sequential transactions. A player
+committing three orders totalling more than their balance makes the **mempool**
+decide which land. Same fix as hole #1.
+
+**5. Multi-attacker resolution is unspecified.** Two guilds attack the same hex
+in the same tick — who wins? *Assumed: highest A; exact tie means the defender
+holds; every losing attacker pays the 20%.*
+
+**6. No minimum guild size.** See the verdict above.
+
+**7. "A hex undefended for 30 ticks loses its fortification" is ambiguous** — not
+attacked, or no defensive stake? *Assumed: no defensive stake revealed in 30
+ticks.*
+
+**8. Defending is a bot's job.** One order per hex per tick: holding 40 hexes
+means 40 orders, three times a day, for 42 days. This contradicts *"ticks exist
+so bots do not win"*. Ticks prevent reflex combat, not automation — they make it
+**mandatory**.
+
+**9. The end-of-season pool invites sniping.** 90% of the pool is not consumed
+during the season and is distributed on the **final** state. Only the last tick's
+map matters.
+
+**10. `Σ √stake` rewards splitting.** A deliberate choice in the brief, but the
+price should be known: splitting a stake across N wallets multiplies power by
+`√N` — verified in `sim/selftest.ts`, 100 wallets = **x10 at equal capital**.
 
 ---
 
-## Ce qui est déjà acquis pour M1
+## Two figures beyond the gate
 
-**L'invariant d'ordre des transactions est prouvé, pas supposé.** La résolution
-est une fonction pure `(snapshot, ordres) → effets` : aucune bataille ne voit le
-résultat d'une autre. Un tick sur sept est rejoué avec les ordres mélangés et
-les effets comparés par empreinte — **0 échec sur toutes les saisons de tous les
-scénarios**. C'est le quatrième test invariant Foundry exigé au M1, validé avant
-d'écrire le contrat.
+**The empire tax destroys half the economy.** 51% of starting capital is burned
+per season, **99% of it from the attack surcharge alone**. Fixed supply, no
+minting: at that rate the game runs dry in a few seasons.
 
-`sim/rules.ts` et `sim/fixed.ts` sont écrits pour être transposés ligne à ligne
-en Solidity : entiers partout, `isqrt` de Babylone vérifiée sur 200 000 valeurs
-plus 2 000 grands entiers aléatoires.
+**Small players leave before mid-season.** 61% of passive and medium players quit,
+median quit tick **43 of 126**, mostly through ruin.
+
+Other measures (`base`): territory Gini 0.605; balance Gini 0.707; largest guild
+16.4%; map fully partitioned by season end; ~750 battles and ~582 captures per
+season.
 
 ---
 
-## Recommandations avant d'ouvrir M1
+## Already banked for M1
 
-1. **Taxer le claim comme l'attaque**, ou faire croître son coût avec `hexCount`.
-2. **Changer la métrique du gate** : mesurer le plus gros **acteur** et la plus
-   grosse **guilde**, pas le plus gros wallet.
-3. **Poser un bond au commit** — ferme les trous #1 et #4 d'un coup.
-4. **Baisser l'exposant de la taxe d'empire** et re-mesurer le burn.
-5. **Imposer une taille minimale de guilde**, ou accepter le solo et le pricer.
-6. **Trancher les points 2, 3, 5, 7** — ce sont des choix de design, pas des bugs.
+**The transaction-order invariant is proven, not assumed.** Resolution is a pure
+function `(snapshot, orders) → effects`: no battle sees another's result. Every
+seventh tick is replayed with the orders shuffled and the effects compared by
+fingerprint — **zero failures across every season of every scenario**. That is
+the fourth Foundry invariant test the brief requires at M1, cleared before the
+contract is written.
+
+`sim/rules.ts` and `sim/fixed.ts` are written to transpose line by line into
+Solidity: integers throughout, Babylonian `isqrt` verified across 200,000 values
+plus 2,000 large random integers.
+
+---
+
+## Recommendations before opening M1
+
+1. **Tax claiming like attacking**, or scale the claim cost with `hexCount`.
+2. **Change the gate metric**: measure the largest **actor** and the largest
+   **guild**, not the largest wallet.
+3. **Post a bond at commit** — closes holes #1 and #4 at once.
+4. **Lower the empire tax exponent** and re-measure the burn.
+5. **Require a minimum guild size**, or accept solo play and price it.
+6. **Settle points 2, 3, 5, 7** — design choices, not bugs.
 
 ---
 
 ## Structure
 
 ```
-src/app/            layout, page, globals.css, icon, image OG, robots, sitemap
-src/components/     World (coque), HexMap (canvas), HexPanel, TickClock,
-                    InfoOverlay, Ticker, Navbar, Drawer
-src/lib/            site-config, hexmap, season (horloge), guilds,
-                    preview-board (généré)
+src/app/            layout, page, globals.css, icon, OG image, robots, sitemap
+src/components/     World (shell), HexMap (canvas), HexPanel, Docs, TickClock,
+                    Ticker, Navbar, Drawer
+src/lib/            site-config, hexmap, season (clock), guilds, economics,
+                    preview-board (generated)
 sim/                fixed, rules, hex, engine, agents, season, metrics,
                     run, diag, selftest, export-board
 ```
 
-Le seul aléatoire du projet est dans `mulberry32`, qui pilote **uniquement** le
-comportement des agents simulés — jamais une résolution. Toute la règle de jeu
-est déterministe et en entiers. Les seeds sont fixes : `npm run sim` redonne
-exactement ces chiffres.
+The only randomness in the project is `mulberry32`, which drives **only** the
+behaviour of the simulated agents — never a resolution. The whole game rule is
+deterministic and integer. Seeds are fixed: `npm run sim` reproduces these
+figures exactly.

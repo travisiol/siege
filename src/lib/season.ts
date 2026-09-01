@@ -1,14 +1,13 @@
 /*
- * Le rythme du jeu.
+ * The rhythm of the game.
  *
- * Un tick dure 8 h et se découpe en trois: 7 h de commit où les montants
- * restent scellés, 45 min de reveal obligatoire, 15 min de résolution où
- * toutes les batailles tombent d'un bloc. 126 ticks font une saison de six
- * semaines.
+ * A tick lasts 8h and splits three ways: 7h of commit where amounts stay
+ * sealed, 45min of mandatory reveal, 15min of resolution where every battle
+ * lands at once. 126 ticks make a six-week season.
  *
- * Aucun contrat n'est déployé, donc rien de tout cela ne tourne pour de vrai.
- * L'horloge du site démontre la cadence à partir d'une ancre fixe, et chaque
- * surface qui l'affiche le dit.
+ * No contract is deployed, so none of this runs for real. The clock on the
+ * site demonstrates the cadence from a fixed anchor, and every surface showing
+ * it says so.
  */
 
 export const TICK_SECONDS = 8 * 60 * 60;
@@ -21,23 +20,23 @@ export const PHASES: { name: PhaseName; label: string; seconds: number; blurb: s
     name: "commit",
     label: "Commit",
     seconds: 7 * 60 * 60,
-    blurb: "On dépose un hash. Le montant reste secret.",
+    blurb: "You post a hash. The amount stays secret.",
   },
   {
     name: "reveal",
     label: "Reveal",
     seconds: 45 * 60,
-    blurb: "Révélation obligatoire. Un reveal manqué coûte la mise.",
+    blurb: "Mandatory reveal. Miss it and the stake is forfeit.",
   },
   {
     name: "resolution",
-    label: "Résolution",
+    label: "Resolution",
     seconds: 15 * 60,
-    blurb: "Toutes les batailles se résolvent d'un seul bloc.",
+    blurb: "Every battle on the map resolves at once.",
   },
 ];
 
-/** Ancre de démonstration. Fixe, pour que la cadence soit reproductible. */
+/** Demonstration anchor. Fixed, so the cadence is reproducible. */
 const ANCHOR = Date.parse(
   process.env.NEXT_PUBLIC_SIEGE_SEASON_START ?? "2026-08-24T00:00:00Z",
 );
@@ -46,11 +45,11 @@ export type TickState = {
   tick: number;
   phase: PhaseName;
   phaseLabel: string;
-  /** Secondes restantes dans la phase courante. */
+  /** Seconds left in the current phase. */
   remaining: number;
-  /** Avancement de la phase, 0..1. */
+  /** Phase progress, 0..1. */
   phaseProgress: number;
-  /** Avancement du tick entier, 0..1. */
+  /** Whole-tick progress, 0..1. */
   tickProgress: number;
 };
 
@@ -75,7 +74,7 @@ export function tickStateAt(now: number): TickState {
     acc += phase.seconds;
   }
 
-  // Inatteignable: les trois phases totalisent exactement TICK_SECONDS.
+  // Unreachable: the three phases total exactly TICK_SECONDS.
   const last = PHASES[PHASES.length - 1];
   return {
     tick,
@@ -87,7 +86,7 @@ export function tickStateAt(now: number): TickState {
   };
 }
 
-/** hh:mm:ss, tronqué à mm:ss sous une heure. */
+/** hh:mm:ss, trimmed to mm:ss under an hour. */
 export function formatCountdown(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   const h = Math.floor(s / 3600);

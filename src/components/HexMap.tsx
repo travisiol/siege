@@ -11,27 +11,26 @@ import {
 import { guildColor, NEUTRAL_COLOR } from "@/lib/guilds";
 
 /*
- * La carte. Canvas 2D, pas de librairie 3D — le brief l'impose et il a raison:
- * 547 hexagones plats se dessinent en quelques millisecondes et restent nets à
- * n'importe quel zoom.
+ * The map. Canvas 2D, no 3D library — the brief requires it and it is right:
+ * 547 flat hexes draw in a few milliseconds and stay crisp at any zoom.
  *
- * Le parti pris de lecture: l'INTÉRIEUR d'un territoire est faible, ses
- * FRONTIÈRES sont fortes. Un remplissage uniforme par guilde donne un vitrail
- * illisible; ce qu'un joueur regarde sur une carte de conquête, c'est où sa
- * couleur touche celle d'un autre. On dessine donc les arêtes qui séparent
- * deux propriétaires différents, et on laisse les arêtes internes s'effacer.
+ * The reading is deliberate: the INSIDE of a territory is faint, its BORDERS
+ * are strong. Filling each guild solid gives an unreadable stained-glass
+ * window; what a player looks at on a conquest map is where their colour meets
+ * someone else's. So only the edges separating two different owners are drawn,
+ * and internal edges are left to disappear.
  */
 
 const HEX_ANGLES = Array.from({ length: 6 }, (_, i) => ((60 * i - 30) * Math.PI) / 180);
 
-/** Coins d'un hexagone pointy-top, dans l'ordre horaire depuis le haut-droit. */
+/** Corners of a pointy-top hex, clockwise from upper right. */
 function corners(cx: number, cy: number, size: number): [number, number][] {
   return HEX_ANGLES.map((a) => [cx + size * Math.cos(a), cy + size * Math.sin(a)]);
 }
 
 /**
- * L'arête partagée avec le voisin de direction `i`, exprimée en indices de
- * coins. Dérivé une fois plutôt que redécouvert à chaque frame.
+ * The edge shared with the neighbour in direction `i`, as corner indices.
+ * Derived once rather than rediscovered every frame.
  */
 const EDGE_FOR_DIRECTION = DIRECTIONS.map((_, i) => {
   const a = (6 - i) % 6;
@@ -45,7 +44,7 @@ export type HexMapProps = {
   radius: number;
   selectedId: number | null;
   onSelect: (id: number | null) => void;
-  /** 0 = carte collée à gauche, 1 = collée à droite. */
+  /** 0 = map pinned left, 1 = pinned right. */
   bias?: number;
   biasY?: number;
   className?: string;
@@ -78,9 +77,9 @@ export function HexMap({
   }, [cells]);
 
   /*
-   * La géométrie ne dépend que du rayon: on la calcule à une taille unitaire
-   * et on applique l'échelle au dessin. Redimensionner la fenêtre ne redéclenche
-   * donc aucun recalcul de layout.
+   * Geometry depends only on the radius: compute it at unit size and apply the
+   * scale when drawing. Resizing the window therefore triggers no layout
+   * recomputation at all.
    */
   const layout = useMemo(() => {
     const unit = 10;
@@ -101,7 +100,7 @@ export function HexMap({
     };
   }, [cells]);
 
-  /** Passage écran -> monde, partagé par le dessin et le pointeur. */
+  /** Screen -> world, shared by drawing and pointer hit-testing. */
   const viewFor = useCallback(
     (w: number, h: number) => {
       const fit = Math.min(w / layout.width, h / layout.height) * 0.92;
@@ -137,7 +136,7 @@ export function HexMap({
 
     const { scale, originX, originY } = viewFor(w, h);
     const size = layout.unit * scale;
-    // Sous ~4px d'apothème, les arêtes se confondent: on cesse de les tracer.
+    // Below ~4px apothem the edges merge, so stop drawing them.
     const fine = size > 4;
 
     const at = (id: number) => ({
@@ -145,7 +144,7 @@ export function HexMap({
       y: originY + layout.pts[id].y * scale,
     });
 
-    // --- Remplissages. Faibles: le territoire se lit par ses bords.
+    // --- Fills. Faint: territory reads through its borders.
     for (const c of cells) {
       const { x, y } = at(c.id);
       if (x < -size * 2 || x > w + size * 2 || y < -size * 2 || y > h + size * 2) continue;
@@ -158,8 +157,9 @@ export function HexMap({
       ctx.closePath();
 
       if (owner === 0) {
+        // Unclaimed ground has to read as available, not as background.
         ctx.fillStyle = NEUTRAL_COLOR;
-        ctx.globalAlpha = 0.28;
+        ctx.globalAlpha = c.id === selectedId ? 0.95 : c.id === hovered ? 0.8 : 0.55;
       } else {
         ctx.fillStyle = guildColor(owner);
         ctx.globalAlpha = c.id === selectedId ? 0.62 : c.id === hovered ? 0.46 : 0.3;
@@ -174,7 +174,7 @@ export function HexMap({
       }
     }
 
-    // --- Frontières. Une arête n'est tracée que si elle sépare deux camps.
+    // --- Borders. An edge is drawn only if it separates two sides.
     if (fine) {
       ctx.lineCap = "round";
       for (const c of cells) {
@@ -190,7 +190,7 @@ export function HexMap({
         for (let d = 0; d < 6; d++) {
           const nb = byKey.get(`${c.q + DIRECTIONS[d].q},${c.r + DIRECTIONS[d].r}`);
           const nbOwner = nb === undefined ? -1 : (owners[nb] ?? 0);
-          if (nbOwner === owner) continue; // arête interne: on la laisse disparaître
+          if (nbOwner === owner) continue; // internal edge: let it disappear
           const [a, b] = EDGE_FOR_DIRECTION[d];
           ctx.beginPath();
           ctx.moveTo(pts[a][0], pts[a][1]);
@@ -200,7 +200,7 @@ export function HexMap({
       }
     }
 
-    // --- Marques de tier. La braise ne sert qu'aux 5 % à 8x.
+    // --- Tier marks. The ember is only ever the 5% that pay 8x.
     for (const c of cells) {
       const tier = tiers[c.id] ?? 1;
       if (tier === 1) continue;
@@ -221,7 +221,7 @@ export function HexMap({
       }
     }
 
-    // --- Refuges. Inattaquables: on leur donne un anneau blanc plein.
+    // --- Refuges. Unattackable, so they get a solid white ring.
     for (const id of refugeSet) {
       const { x, y } = at(id);
       if (x < -size || x > w + size || y < -size || y > h + size) continue;
@@ -235,7 +235,7 @@ export function HexMap({
       ctx.stroke();
     }
 
-    // --- Sélection, par-dessus tout le reste.
+    // --- Selection, above everything else.
     for (const id of [hovered, selectedId]) {
       if (id === null || id === undefined) continue;
       const { x, y } = at(id);
@@ -262,7 +262,7 @@ export function HexMap({
     return () => ro.disconnect();
   }, [draw]);
 
-  /** Écran -> identifiant d'hex, ou null hors carte. */
+  /** Screen -> hex id, or null off the map. */
   const hexAt = useCallback(
     (clientX: number, clientY: number): number | null => {
       const wrap = wrapRef.current;
@@ -277,7 +277,7 @@ export function HexMap({
     [viewFor, layout, byKey],
   );
 
-  // Le glissement ne doit pas déclencher une sélection au relâchement.
+  // A drag must not fire a selection on release.
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
 
   return (
@@ -319,7 +319,7 @@ export function HexMap({
       }}
       style={{ cursor: hovered !== null ? "pointer" : "grab", touchAction: "none" }}
     >
-      <canvas ref={canvasRef} aria-label="Carte de SIEGE, 547 hexagones" />
+      <canvas ref={canvasRef} aria-label="SIEGE map, 547 hexes" />
     </div>
   );
 }

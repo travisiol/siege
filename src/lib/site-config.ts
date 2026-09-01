@@ -1,20 +1,20 @@
 /*
- * Le nom vit ici et nulle part ailleurs.
+ * The name lives here and nowhere else.
  *
- * Sur les projets précédents le nom s'était infiltré dans les composants et
- * chaque renommage devenait un grep-and-replace. Ici le hero, la nav, le
- * drawer, l'OG et les métadonnées lisent tous ces trois chaînes.
+ * On earlier projects the name leaked into components and every rename turned
+ * into a grep-and-replace. Here the hero, the nav, the drawer, the OG image and
+ * the metadata all read these three strings.
  */
 export const siteConfig = {
-  // Nom provisoire — pas définitif.
+  // Placeholder name — not final.
   name: "SIEGE",
   wordmark: "Siege",
   ticker: "$SIEGE",
-  tagline: "Take the map. Keep it.",
+  tagline: "Hold ground. Get paid every 8 hours.",
   description:
-    "Un jeu de conquête territoriale onchain. Les guildes misent sur des hexagones, s'attaquent par tours, et la résolution est déterministe de bout en bout.",
+    "An onchain territory game. Guilds stake tokens on hexes, attack in turns, and the winner takes the treasury. Every battle resolves in integer arithmetic — no randomness anywhere.",
   seoDescription:
-    "547 hexagones, douze guildes, un tick toutes les huit heures. Aucun aléatoire: chaque bataille se résout en arithmétique entière.",
+    "547 hexes, twelve guilds, one turn every eight hours. Hold a hex and it pays yield three times a day; take one and its whole treasury moves to you.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://siege.example",
   x: process.env.NEXT_PUBLIC_SIEGE_X ?? null,
   discord: process.env.NEXT_PUBLIC_SIEGE_DISCORD ?? null,
@@ -25,9 +25,9 @@ function envOrNull(value: string | undefined): string | null {
 }
 
 /**
- * Surface chaîne. Rien n'est déployé: tant que l'adresse est absente, toute
- * l'interface d'ordre reste en démonstration et le bouton d'engagement est
- * désactivé. Aucune adresse ni aucun prix inventé ne peut partir en prod.
+ * Chain surface. Nothing is deployed: while the address is missing, the whole
+ * order interface stays in demonstration and the commit button is disabled. No
+ * invented address or price can ship to production.
  */
 export const chainConfig = {
   network: process.env.NEXT_PUBLIC_SIEGE_NETWORK ?? "Base Sepolia",
@@ -37,6 +37,5 @@ export const chainConfig = {
   isLive: process.env.NEXT_PUBLIC_SIEGE_LIVE === "true",
 } as const;
 
-/** Vrai seulement quand un contrat existe réellement à l'autre bout. */
-export const isLive =
-  chainConfig.isLive && chainConfig.battleAddress !== null;
+/** True only when a contract actually exists at the other end. */
+export const isLive = chainConfig.isLive && chainConfig.battleAddress !== null;

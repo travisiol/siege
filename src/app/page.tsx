@@ -1,8 +1,8 @@
 import { World } from "@/components/World";
 
 /*
- * Une page. La carte est le produit, le pitch se pose dessus, et tout le
- * reste s'ouvre par-dessus puis se referme sur la carte.
+ * One page. The map is the product, the pitch sits over it, and everything
+ * else opens on top and closes back to the map.
  */
 export default function Home() {
   return <World />;

@@ -1,11 +1,11 @@
 /*
- * La carte, côté navigateur.
+ * The map, browser side.
  *
- * Même algorithme que `sim/hex.ts` — mêmes coordonnées axiales, même ordre
- * canonique, même placement déterministe des tiers — mais en `number` plutôt
- * qu'en `bigint`, parce qu'ici on dessine, on ne résout pas. Les identifiants
- * d'hex se correspondent d'un fichier à l'autre : c'est ce qui permet au
- * plateau exporté par la simulation de s'appliquer tel quel sur cette carte.
+ * Same algorithm as `sim/hex.ts` — same axial coordinates, same canonical
+ * order, same deterministic tier placement — but in `number` rather than
+ * `bigint`, because here we draw rather than resolve. Hex ids line up between
+ * the two files, which is what lets the board exported by the simulation apply
+ * directly to this map.
  */
 
 export type Axial = { q: number; r: number };
@@ -37,7 +37,7 @@ export type HexCell = {
 
 const key = (q: number, r: number) => `${q},${r}`;
 
-/** Hash entier déterministe : étale les tiers sans jamais tirer au sort. */
+/** Deterministic integer hash: spreads the tiers without ever rolling. */
 function spread(q: number, r: number, salt: number): number {
   let h = (q * 73856093) ^ (r * 19349663) ^ (salt * 83492791);
   h = Math.imul(h ^ (h >>> 15), 2246822507);
@@ -83,7 +83,7 @@ export function buildMap(radius: number): HexCell[] {
   return cells;
 }
 
-/** ~70 % tier 1, 25 % tier 2, 5 % tier 3, deux tier 3 jamais adjacents. */
+/** ~70% tier 1, 25% tier 2, 5% tier 3, no two tier 3 adjacent. */
 function assignTiers(cells: HexCell[]): void {
   const n = cells.length;
   const n3 = Math.round(n * 0.05);
@@ -106,10 +106,10 @@ function assignTiers(cells: HexCell[]): void {
   for (let i = 0; i < Math.min(n2, t2.length); i++) t2[i].tier = 2;
 }
 
-/** Rendement par tier : 1x / 3x / 8x. */
+/** Yield per tier: 1x / 3x / 8x. */
 export const TIER_YIELD: Record<number, number> = { 1: 1, 2: 3, 3: 8 };
 
-/** Centre d'un hex en pixels, orientation pointy-top. */
+/** Centre of a hex in pixels, pointy-top orientation. */
 export function hexCenter(c: Axial, size: number): { x: number; y: number } {
   return {
     x: size * Math.sqrt(3) * (c.q + c.r / 2),
@@ -117,12 +117,12 @@ export function hexCenter(c: Axial, size: number): { x: number; y: number } {
   };
 }
 
-/** Pixel -> axial, arrondi cubique. L'inverse exact de `hexCenter`. */
+/** Pixel -> axial, cube rounding. The exact inverse of `hexCenter`. */
 export function pixelToAxial(x: number, y: number, size: number): Axial {
   const r = (2 / 3) * (y / size);
   const q = x / (size * Math.sqrt(3)) - r / 2;
 
-  // Arrondi en coordonnées cubiques: on corrige l'axe qui a le plus dérivé.
+  // Cube rounding: correct whichever axis drifted most.
   const s = -q - r;
   let rq = Math.round(q);
   let rr = Math.round(r);

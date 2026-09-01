@@ -1,9 +1,9 @@
 /*
- * Les douze guildes et leur couleur.
+ * The twelve guilds and their colour.
  *
- * La teinte est fonctionnelle, pas décorative: sur 547 hexagones identiques,
- * c'est la seule chose qui dise à qui appartient quoi. Elles sont donc tenues
- * hors de la bande orange, réservée à la braise (tier 3 et engagement).
+ * The hue is functional, not decorative: across 547 identical hexes it is the
+ * only thing saying who owns what. They are therefore kept out of the orange
+ * band, which belongs to the ember (tier 3, and committing an order).
  */
 
 export type GuildSkin = { id: number; name: string; color: string };

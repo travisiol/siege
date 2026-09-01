@@ -12,20 +12,20 @@ import {
 } from "@/lib/season";
 
 /*
- * Le battement du jeu, en trois segments.
+ * The heartbeat of the game, in three segments.
  *
- * Sept heures de commit, quarante-cinq minutes de reveal, un quart d'heure de
- * résolution. La barre est proportionnelle à la vraie durée des phases, ce qui
- * fait que le reveal et la résolution sont deux fines lamelles au bout d'un
- * long segment: c'est exactement le ressenti du jeu, et une barre en trois
- * tiers égaux mentirait là-dessus.
+ * Seven hours of commit, forty-five minutes of reveal, a quarter hour of
+ * resolution. The bar is proportional to the real phase durations, which makes
+ * reveal and resolution two thin slivers at the end of a long segment: that is
+ * exactly how the game feels, and a bar in three equal thirds would lie about
+ * it.
  *
- * Rien ne tourne pour de vrai — aucun contrat n'est déployé. L'horloge démontre
- * la cadence à partir d'une ancre fixe, et le dit.
+ * Nothing runs for real — no contract is deployed. The clock demonstrates the
+ * cadence from a fixed anchor, and says so.
  */
 export function TickClock({ className }: { className?: string }) {
-  // Rendu serveur et premier rendu client doivent coïncider: on démarre à null
-  // et l'horloge n'apparaît qu'une fois montée.
+  // Server render and first client render have to agree: start at null and let
+  // the clock appear only once mounted.
   const [state, setState] = useState<TickState | null>(null);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function TickClock({ className }: { className?: string }) {
         {state ? formatCountdown(state.remaining) : "--:--:--"}
       </div>
 
-      {/* Segments à l'échelle des vraies durées. */}
+      {/* Segments scaled to the real durations. */}
       <div className="mt-3 flex h-1.5 w-full gap-[2px]">
         {PHASES.map((phase) => {
           const active = state?.phase === phase.name;
@@ -89,7 +89,7 @@ export function TickClock({ className }: { className?: string }) {
       <p className="type-data mt-2 text-chalk-muted">
         {state
           ? PHASES.find((p) => p.name === state.phase)?.blurb
-          : "Un tick dure 8 h : commit, reveal, résolution."}
+          : "One tick is 8h: commit, reveal, resolution."}
       </p>
     </div>
   );

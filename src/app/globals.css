@@ -1,21 +1,20 @@
 @import "tailwindcss";
 
 /*
- * SIEGE — 547 hexagones, douze guildes, un tick toutes les huit heures.
+ * SIEGE — 547 hexes, twelve guilds, one tick every eight hours.
  *
- * Sol graphite froid, comme une table de guerre sous lampe basse. La couleur
- * appartient aux guildes: douze teintes qui ne servent qu'à dire « ceci est
- * tenu, et par qui ». Le neutre reste gris — sur une carte où tout est un
- * hexagone identique, la teinte doit signifier la possession ou elle ne
- * signifie rien.
+ * Cold graphite ground, like a war table under a low lamp. Colour belongs to
+ * the guilds: twelve hues whose only job is to say "this is held, and by whom".
+ * Neutral stays grey — on a map where every cell is an identical hexagon, hue
+ * has to mean ownership or it means nothing.
  *
- * La braise est rationnée à deux emplois, et à rien d'autre: les 27 hexes de
- * tier 3 (5 % de la carte, 8x de rendement, jamais adjacents) et le geste
- * d'engager un ordre. Le reste du jeu est froid; ce qui brûle se paie.
+ * The ember is rationed to two uses and nothing else: the 27 tier 3 hexes (5%
+ * of the map, 8x yield, never adjacent) and the act of committing an order.
+ * The rest of the game is cold; what burns is what costs you.
  *
- * Le display est lourd et large, comme un logotype de jeu. La donnée est en
- * mono tabulaire, parce que ce jeu se résout en entiers et que les nombres
- * doivent se lire comme un relevé, pas comme un argument de vente.
+ * Display type is heavy and wide, the way a game wordmark is built. Data type
+ * is tabular mono, because this game resolves in integers and the numbers have
+ * to read as a statement of account, not as a sales pitch.
  */
 :root {
   --void: #0b0d0f;
@@ -38,9 +37,8 @@
   --loss: #e5484d;
 
   /*
-   * Les douze guildes. Teintes réparties sur le cercle en évitant la bande
-   * orange, qui appartient à la braise: une guilde ne doit jamais pouvoir
-   * être confondue avec un tier 3.
+   * The twelve guilds. Hues spread around the wheel avoiding the orange band,
+   * which belongs to the ember: a guild must never be mistakable for a tier 3.
    */
   --g1: #4c8df6;
   --g2: #1fc7a9;
@@ -99,9 +97,9 @@ body {
 /* ---- Type ------------------------------------------------------------ */
 
 /*
- * Dimensionné contre sa propre colonne, pas contre le viewport: le bloc de
- * pitch vit dans un rail de ~520px sur desktop et pleine largeur quand la
- * mise en page s'empile. Un clamp en vw se trompe dans l'un des deux cas.
+ * Sized against its own column, not the viewport: the pitch block lives in a
+ * ~560px rail on desktop and full width once the layout stacks. A vw clamp gets
+ * one of those two wrong every time.
  */
 .pitch {
   container-type: inline-size;
@@ -117,8 +115,9 @@ body {
 }
 
 /*
- * Le liseré du logotype. `paint-order` place le contour derrière la glyphe,
- * sinon le trait mange les pleins et le blanc cesse d'être blanc.
+ * The wordmark keyline. `paint-order` puts the stroke behind the glyph —
+ * without it the stroke eats into the letterforms and the white stops being
+ * white.
  */
 .wordmark-outline {
   -webkit-text-stroke: 6px var(--ember);
@@ -134,7 +133,7 @@ body {
 .type-display {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(24px, 3.4vw, 40px);
+  font-size: clamp(22px, 2.9vw, 34px);
   line-height: 1;
   letter-spacing: -0.005em;
   text-transform: uppercase;
@@ -148,7 +147,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Les nombres. Toujours mono, toujours tabulaires. */
+/* Numbers. Always mono, always tabular. */
 .type-figure {
   font-family: var(--font-mono);
   font-weight: 600;
@@ -189,7 +188,7 @@ body {
   line-height: 1.6;
 }
 
-/* Les formules se lisent comme du code, parce que c'en est. */
+/* Formulas read as code, because that is what they are. */
 .type-formula {
   font-family: var(--font-mono);
   font-weight: 400;
@@ -217,7 +216,7 @@ body {
   outline-offset: 2px;
 }
 
-/* Bandeau. Le contenu est dupliqué: on défile une copie, puis on boucle. */
+/* Ticker. Content is duplicated: scroll one copy, then loop. */
 @keyframes ticker {
   from {
     transform: translateX(0);
@@ -231,7 +230,7 @@ body {
   animation: ticker 48s linear infinite;
 }
 
-/* La phase de résolution: 15 minutes où tout se joue d'un bloc. */
+/* The resolution phase: 15 minutes where the whole map lands at once. */
 @keyframes pulse-ember {
   0%,
   100% {

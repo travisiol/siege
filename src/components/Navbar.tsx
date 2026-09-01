@@ -3,17 +3,18 @@
 import { Drawer } from "@/components/Drawer";
 import { Label } from "@/components/ui/Label";
 import { previewBoard } from "@/lib/preview-board";
+import { money } from "@/lib/economics";
 import { siteConfig, isLive, chainConfig } from "@/lib/site-config";
 
 /*
- * L'état de la carte, porté dans l'en-tête.
+ * The state of the map, carried in the header.
  *
- * Chaque puce est une vraie lecture du plateau simulé. La pastille de droite
- * dit l'état réel du projet — tant qu'aucun contrat n'existe, elle le dit,
- * plutôt que d'afficher un faux « live » qui vieillirait mal.
+ * Every chip is a real reading off the simulated board. The pill on the right
+ * states the actual state of the project — while no contract exists it says so,
+ * rather than showing a fake "live" that would age badly.
  */
 
-/** La marque : un hexagone forcé sur un flanc. */
+/** The mark: a hex breached on one flank. */
 function Mark() {
   return (
     <svg width="28" height="32" viewBox="0 0 28 32" aria-hidden focusable="false">
@@ -34,12 +35,16 @@ export function Navbar() {
   const chips = [
     { key: "Hexes", value: String(previewBoard.totalHexes) },
     {
-      key: "Tenus",
+      key: "Held",
       value: `${Math.round((100 * held) / previewBoard.totalHexes)}%`,
     },
     {
-      key: "Guildes",
+      key: "Guilds",
       value: String(previewBoard.guilds.filter((g) => g.hexes > 0).length),
+    },
+    {
+      key: "Pool",
+      value: money(previewBoard.seasonPool),
     },
   ];
 
@@ -69,10 +74,10 @@ export function Navbar() {
           title={
             isLive
               ? undefined
-              : "Aucun contrat n'est déployé : la carte affichée sort de la simulation d'équilibrage."
+              : "No contract is deployed: the board shown comes from the balance simulation."
           }
         >
-          {isLive ? chainConfig.network : "Avant-lancement"}
+          {isLive ? chainConfig.network : "Pre-launch"}
         </span>
       </nav>
     </header>

@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
-/** Une clé sur la fiche: mono, chassée, capitales. */
+/** A key on the sheet: mono, tracked out, uppercase. */
 export function Label({
   children,
   className,
@@ -17,11 +17,11 @@ export function Label({
 }
 
 /**
- * Marque la surface comme antérieure au lancement.
+ * Marks the surface as pre-launch.
  *
- * Le plateau affiché est une saison simulée, pas une lecture de chaîne. Sans
- * cette étiquette, une carte pleine de guildes affirme une activité qui
- * n'existe pas encore — c'est elle qui tient la promesse du site.
+ * The board shown is a simulated season, not a chain read. Without this tag, a
+ * map full of guilds asserts activity that has not happened yet — this label is
+ * what keeps the page honest.
  */
 export function PreviewTag({ className }: { className?: string }) {
   return (
@@ -32,7 +32,7 @@ export function PreviewTag({ className }: { className?: string }) {
       )}
     >
       <span className="h-1.5 w-1.5 bg-ember" />
-      Avant-lancement
+      Pre-launch
     </span>
   );
 }
