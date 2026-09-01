@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Label } from "@/components/ui/Label";
+import { Label, SourceNote } from "@/components/ui/Label";
 import { guildColor, guildName } from "@/lib/guilds";
 import { useBoardData } from "@/lib/board-context";
 import { guildEconomics, money } from "@/lib/economics";
@@ -142,11 +142,9 @@ export function Drawer() {
               </dl>
             </div>
 
-            <p className="type-data px-5 py-4 text-chalk-muted">
-              Nothing is deployed. These standings come out of the balance
-              simulation, not the chain — a demonstration of what the map will
-              do, not a live game state.
-            </p>
+            <div className="px-5 py-4">
+              <SourceNote />
+            </div>
           </nav>
         </div>
       )}

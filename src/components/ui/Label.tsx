@@ -1,5 +1,8 @@
+"use client";
+
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
+import { useBoardContext } from "@/lib/board-context";
 
 /** A key on the sheet: mono, tracked out, uppercase. */
 export function Label({
@@ -17,22 +20,22 @@ export function Label({
 }
 
 /**
- * Marks the surface as pre-launch.
+ * Says where the board came from, and only when that needs saying.
  *
- * The board shown is a simulated season, not a chain read. Without this tag, a
- * map full of guilds asserts activity that has not happened yet — this label is
- * what keeps the page honest.
+ * A map showing twelve guilds and hundreds of battles is asserting activity. If
+ * that activity came out of the balance simulation rather than off a chain, the
+ * page has to say so somewhere or it is claiming something untrue. One quiet
+ * line does that job; a badge on every surface only shouted it.
+ *
+ * It renders nothing once a real board is being served, so there is no label to
+ * remember to remove on launch day.
  */
-export function PreviewTag({ className }: { className?: string }) {
+export function SourceNote({ className }: { className?: string }) {
+  const { source } = useBoardContext();
+  if (source !== "simulation") return null;
   return (
-    <span
-      className={clsx(
-        "type-label inline-flex items-center gap-1.5 border border-ember/40 bg-ember/10 px-2 py-1 text-ember",
-        className,
-      )}
-    >
-      <span className="h-1.5 w-1.5 bg-ember" />
-      Pre-launch
+    <span className={clsx("type-label text-chalk-muted", className)}>
+      Board from the balance simulation
     </span>
   );
 }

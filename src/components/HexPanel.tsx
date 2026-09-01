@@ -1,8 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { Button } from "@/components/ui/Button";
-import { Label, PreviewTag } from "@/components/ui/Label";
+import { Label } from "@/components/ui/Label";
+import { OrderPanel } from "@/components/OrderPanel";
 import { guildColor, guildName } from "@/lib/guilds";
 import { TIER_YIELD, type HexCell } from "@/lib/hexmap";
 import { hexEconomics, guildEconomics, money } from "@/lib/economics";
@@ -245,47 +245,13 @@ export function HexPanel({ cell, onClose }: { cell: HexCell; onClose: () => void
           </p>
         )}
 
-        {/* ---- Order panel. Disabled while no contract exists. */}
-        <div className="mx-5 mb-5 mt-4 border border-rule">
-          <div className="flex items-center justify-between gap-2 border-b border-rule px-4 py-3">
-            <Label className="text-chalk-soft">Commit an order</Label>
-            <PreviewTag />
-          </div>
-
-          <div className="px-4 py-4">
-            <div className="flex gap-2">
-              {(owner === 0
-                ? ([{ k: "claim", l: "Claim" }] as const)
-                : ([
-                    { k: "attack", l: "Attack" },
-                    { k: "defend", l: "Defend" },
-                  ] as const)
-              ).map((opt) => (
-                <span
-                  key={opt.k}
-                  className="type-label flex-1 border border-rule-strong px-3 py-2.5 text-center text-chalk-muted"
-                >
-                  {opt.l}
-                </span>
-              ))}
-            </div>
-
-            <p className="type-data mt-3 text-chalk-muted">
-              {owner === 0
-                ? `A neutral hex next to ground you already hold costs ${money(e.claimCost)} ${siteConfig.ticker} and needs no battle.`
-                : "Your stake stays sealed until reveal — the commit is only a hash. Nobody, defender included, sees what is coming."}
-            </p>
-
-            <Button className="mt-4 w-full" disabled>
-              {isLive ? "Commit" : "Contracts not deployed"}
-            </Button>
-
-            <p className="type-data mt-3 text-chalk-muted">
-              {isLive
-                ? `${chainConfig.network}.`
-                : `Nothing is deployed. ${chainConfig.network} is the target, once the balance simulation clears.`}
-            </p>
-          </div>
+        <div className="mx-5 mb-5 mt-4">
+          <OrderPanel
+            hexId={cell.id}
+            tier={e.tier}
+            isNeutral={owner === 0}
+            claimCost={e.claimCost}
+          />
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { Resolution } from "@/components/Resolution";
 import { TickClock } from "@/components/TickClock";
 import { Ticker } from "@/components/Ticker";
 import { Button } from "@/components/ui/Button";
-import { Label, PreviewTag } from "@/components/ui/Label";
+import { Label, SourceNote } from "@/components/ui/Label";
 import { buildMap } from "@/lib/hexmap";
 import { useBoardData } from "@/lib/board-context";
 import { siteConfig } from "@/lib/site-config";
@@ -104,11 +104,11 @@ export function World() {
       {!selected && (
         <div className="pointer-events-none absolute inset-x-0 top-[42%] bottom-10 overflow-y-auto border-t border-rule bg-void/90 px-4 backdrop-blur-sm sm:px-8 lg:inset-y-0 lg:top-0 lg:bottom-0 lg:flex lg:w-[50%] lg:items-center lg:overflow-visible lg:border-0 lg:bg-transparent lg:pb-12 lg:backdrop-blur-none">
           <div className="pitch pointer-events-auto w-full max-w-[480px] py-5 lg:py-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <PreviewTag />
-              <Label>
-                Simulated season · tick {previewBoard.tick} / {previewBoard.ticksPerSeason}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Label className="text-chalk-soft">
+                Tick {previewBoard.tick} / {previewBoard.ticksPerSeason}
               </Label>
+              <SourceNote />
             </div>
 
             <h1 className="type-hero wordmark-outline mt-4 text-chalk">
@@ -142,7 +142,6 @@ export function World() {
       {selected && (
         <div className="pointer-events-none absolute inset-x-0 bottom-14 hidden px-4 sm:block sm:px-8">
           <div className="pointer-events-auto flex flex-wrap items-center gap-3">
-            <PreviewTag />
             <Button variant="outline" onClick={() => setDocsOpen(true)}>
               How it works
             </Button>

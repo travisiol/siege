@@ -13,8 +13,8 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
       <div className="max-w-[42ch] border border-rule bg-field px-6 py-6">
         <p className="type-label text-ember">Something broke</p>
         <p className="type-body mt-3 text-chalk-soft">
-          The map failed to draw. Nothing was lost — no contract is deployed and
-          nothing on this page holds state.
+          The map failed to draw. Nothing was lost: this page holds no state of
+          its own, and no order is placed without a wallet signature.
         </p>
         <button
           type="button"

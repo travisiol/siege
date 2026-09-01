@@ -21,8 +21,8 @@ import {
  * exactly how the game feels, and a bar in three equal thirds would lie about
  * it.
  *
- * Nothing runs for real — no contract is deployed. The clock demonstrates the
- * cadence from a fixed anchor, and says so.
+ * With a contract deployed the tick comes off chain. Without one the clock
+ * falls back to a fixed anchor so the cadence is still legible.
  */
 export function TickClock({ className }: { className?: string }) {
   // Server render and first client render have to agree: start at null and let

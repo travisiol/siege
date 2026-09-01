@@ -73,15 +73,8 @@ export function Navbar() {
 
         <WalletConnect className="shrink-0 border border-rule-strong text-chalk hover:border-ember hover:text-ember" />
 
-        <span
-          className="type-label ml-auto shrink-0 border border-rule-strong px-2.5 py-1.5 text-chalk-muted md:ml-0"
-          title={
-            isLive
-              ? undefined
-              : "No contract is deployed: the board shown comes from the balance simulation."
-          }
-        >
-          {isLive ? chainConfig.network : "Pre-launch"}
+        <span className="type-label ml-auto shrink-0 border border-rule-strong px-2.5 py-1.5 text-chalk-muted md:ml-0">
+          {chainConfig.network}
         </span>
       </nav>
     </header>

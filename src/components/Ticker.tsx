@@ -1,7 +1,7 @@
 "use client";
 
 import { guildColor, guildName } from "@/lib/guilds";
-import { useBoardData } from "@/lib/board-context";
+import { useBoardContext } from "@/lib/board-context";
 
 /*
  * The standings, as a band.
@@ -10,7 +10,7 @@ import { useBoardData } from "@/lib/board-context";
  * over, which gives a seamless loop without measuring anything in JavaScript.
  */
 export function Ticker() {
-  const previewBoard = useBoardData();
+  const { board: previewBoard, source } = useBoardContext();
   const standings = previewBoard.guilds.filter((g) => g.hexes > 0);
 
   const items = standings.map((g) => (
@@ -27,7 +27,7 @@ export function Ticker() {
   return (
     <div className="flex items-center border-t border-rule bg-void/92 backdrop-blur-sm">
       <span className="type-label shrink-0 border-r border-rule px-4 py-2.5 text-chalk-muted">
-        Simulated season
+        {source === "simulation" ? "Simulated" : `Tick ${previewBoard.tick}`}
       </span>
       <div className="flex-1 overflow-hidden py-2.5">
         <div className="animate-ticker flex w-max items-center">

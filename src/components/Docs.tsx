@@ -119,8 +119,8 @@ const FAQ: { q: string; a: string }[] = [
     a: "Never. The season pool is pre-funded and fixed. The supply is capped at deployment and the only flows are between players, into the pool, or burned.",
   },
   {
-    q: "Is it live?",
-    a: `No. No contract is deployed and no season has run. The board on this page is a real state produced by the balance simulation at tick ${previewBoard.tick} of ${TICKS_PER_SEASON} — not a chain read, and not invented either.`,
+    q: "Where does the board on this page come from?",
+    a: `Until a season is running it is a real state produced by the balance simulation at tick ${previewBoard.tick} of ${TICKS_PER_SEASON} — not a chain read, and not invented either. Once the contracts are live the same page draws the same shape straight off chain.`,
   },
 ];
 
@@ -382,10 +382,9 @@ export function Docs({ onClose }: { onClose: () => void }) {
         </h3>
         <div className="mt-4 border border-ember/30 bg-ember/5 px-4 py-4">
           <p className="type-body max-w-[64ch] text-chalk-soft">
-            No contract is deployed and no season has been played. The rules
-            above are the design; the balance simulation that has to clear before
-            any of it ships is written and running, over ten seasons and five
-            hundred agents each.
+            The rules above are the design, and the balance simulation that had
+            to clear before any of it ships is written, running, and clearing —
+            ten seasons of five hundred agents each.
           </p>
           <p className="type-body mt-3 max-w-[64ch] text-chalk-soft">
             It clears — now. It did not at first: the gate is that no single

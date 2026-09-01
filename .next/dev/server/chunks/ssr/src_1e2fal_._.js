@@ -3972,9 +3972,11 @@ function envOrNull(value) {
 const chainConfig = {
     network: process.env.NEXT_PUBLIC_HEXWAR_NETWORK ?? "Base Sepolia",
     battleAddress: envOrNull(process.env.NEXT_PUBLIC_HEXWAR_BATTLE_ADDRESS),
+    mapAddress: envOrNull(process.env.NEXT_PUBLIC_HEXWAR_MAP_ADDRESS),
+    tokenAddress: envOrNull(process.env.NEXT_PUBLIC_HEXWAR_TOKEN_ADDRESS),
     isLive: process.env.NEXT_PUBLIC_HEXWAR_LIVE === "true"
 };
-const isLive = chainConfig.isLive && chainConfig.battleAddress !== null;
+const isLive = chainConfig.isLive && chainConfig.battleAddress !== null && chainConfig.mapAddress !== null && chainConfig.tokenAddress !== null;
 }),
 ];
 

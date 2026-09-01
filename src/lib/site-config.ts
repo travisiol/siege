@@ -34,8 +34,21 @@ export const chainConfig = {
   battleAddress: envOrNull(
     process.env.NEXT_PUBLIC_HEXWAR_BATTLE_ADDRESS,
   ) as `0x${string}` | null,
+  mapAddress: envOrNull(process.env.NEXT_PUBLIC_HEXWAR_MAP_ADDRESS) as `0x${string}` | null,
+  tokenAddress: envOrNull(process.env.NEXT_PUBLIC_HEXWAR_TOKEN_ADDRESS) as `0x${string}` | null,
   isLive: process.env.NEXT_PUBLIC_HEXWAR_LIVE === "true",
 } as const;
 
-/** True only when a contract actually exists at the other end. */
-export const isLive = chainConfig.isLive && chainConfig.battleAddress !== null;
+/**
+ * True only when the three addresses the order flow needs actually exist.
+ *
+ * Everything user-facing keys off this one value. Fill the addresses in and the
+ * whole buy flow turns on; leave them out and the page says plainly that there
+ * is nothing to buy yet. There is no third state and nothing to remember to
+ * flip by hand.
+ */
+export const isLive =
+  chainConfig.isLive &&
+  chainConfig.battleAddress !== null &&
+  chainConfig.mapAddress !== null &&
+  chainConfig.tokenAddress !== null;

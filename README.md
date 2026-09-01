@@ -77,10 +77,32 @@ them and says so in the header rather than implying that is how time passed. The
 numbers come from `npm run sim:replay`, and once a chain is live the indexer
 serves the identical shape from `/replay/:tick`.
 
-**Nothing is deployed, and the site says so.** The order panel is disabled, the
-board is labelled as a simulation everywhere it appears, and `isLive` stays false
-while `NEXT_PUBLIC_HEXWAR_BATTLE_ADDRESS` is unset. No invented address or price
-can ship.
+**The buy flow is a queue of one question at a time.** Connect, switch network,
+join a guild, approve, deposit, commit, reveal — the panel resolves to exactly
+one of those and shows only that. It turns on when the battle, map and token
+addresses are set; until then it says plainly that there is nothing to trade yet.
+One boolean, `isLive`, gates all of it, so there is no third state and nothing to
+flip by hand on launch day.
+
+Depositing is separate from staking, and not for convenience: an ERC-20 transfer
+at commit time would publish the amount, which is the one thing a sealed order
+exists to hide. Tokens move into an internal balance first and the commit moves
+nothing at all.
+
+**Salt custody is solved by derivation, not by storage.** A commit is a hash over
+(hexId, amount, isAttack, salt, player), and the player has to produce all five
+seven hours later. A random salt in localStorage would mean clearing site data
+costs somebody their position, so the salt is derived instead — `keccak256(seed,
+tick, hexId, nonce)`, where the seed comes from one signature per season. Losing
+your browser costs a signature prompt. And because the contract debits the stake
+at reveal rather than commit, a wallet that recovers nothing at all loses the
+bond, not the stake.
+
+**Where the board came from is stated once, quietly, and only while it needs
+stating.** A map showing twelve guilds and hundreds of battles is asserting
+activity; if that came out of the simulation rather than a chain, the page has to
+say so. It renders nothing once a real board is served, so there is no label to
+remember to remove.
 
 The name lives in `src/lib/site-config.ts` and nowhere else — `name`, `wordmark`,
 `ticker`. Renaming means editing those three strings, not a grep-and-replace
